@@ -60,9 +60,31 @@ class DashboardController extends Controller
 
         $roles = User::ROLES;
 
+        // Monthly ticket data for charts (last 6 months)
+        $monthlyData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $monthlyData[] = [
+                'label' => $month->format('M Y'),
+                'count' => Tiket::whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count(),
+            ];
+        }
+
+        // Overdue breakdown by stage
+        $overdueByStage = [];
+        foreach (Tiket::STAGES as $stageKey => $stageLabel) {
+            $overdueByStage[$stageKey] = Tiket::where('status', $stageKey)
+                ->whereNotNull('tanggal_target_selesai')
+                ->whereDate('tanggal_target_selesai', '<', $today)
+                ->count();
+        }
+
         return view('dashboard.index', compact(
             'totalTiket', 'tiketHariIni', 'tiketSelesai', 'tiketDikembalikan', 'overdueCount',
-            'stageCounts', 'recentTikets', 'recentActivities', 'roles', 'user'
+            'stageCounts', 'recentTikets', 'recentActivities', 'roles', 'user',
+            'monthlyData', 'overdueByStage'
         ));
     }
 }

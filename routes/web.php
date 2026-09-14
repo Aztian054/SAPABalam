@@ -29,7 +29,7 @@ Route::get('/', function () {
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit')->middleware('throttle:6,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Public tracking
@@ -161,5 +161,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::get('/print', [ReportController::class, 'print'])->name('print');
             Route::get('/export', [ReportController::class, 'export'])->name('export');
+            Route::get('/print-rapi', [ReportController::class, 'printRapi'])->name('print_rapi');
         });
 });

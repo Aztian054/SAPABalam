@@ -207,4 +207,43 @@ class ReportController extends Controller
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
+
+    /** Cetak rapi (landscape, PDF-ready via browser print dialog). */
+    public function printRapi(Request $request)
+    {
+        $query = Tiket::with(['jenisPermohonan', 'bidangTanahs', 'petugasLoket']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('jenis_permohonan_id')) {
+            $query->where('jenis_permohonan_id', $request->jenis_permohonan_id);
+        }
+        if ($request->filled('start_date')) {
+            $query->whereDate('tanggal_masuk', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('tanggal_masuk', '<=', $request->end_date);
+        }
+        if ($request->filled('q')) {
+            $s = trim($request->q);
+            $query->where(function ($q) use ($s) {
+                $q->where('kode_tiket', 'like', "%{$s}%")
+                    ->orWhere('nama_pemohon', 'like', "%{$s}%")
+                    ->orWhere('nik_pemohon', 'like', "%{$s}%");
+            });
+        }
+
+        $tikets = $query->orderByDesc('id')->get();
+
+        $startDate = $request->filled('start_date')
+            ? $request->start_date
+            : Carbon::today()->startOfMonth()->toDateString();
+        $endDate = $request->filled('end_date')
+            ? $request->end_date
+            : Carbon::today()->toDateString();
+        $status = $request->filled('status') ? $request->status : '';
+
+        return view('reports.print_rapi', compact('tikets', 'startDate', 'endDate', 'status'));
+    }
 }
