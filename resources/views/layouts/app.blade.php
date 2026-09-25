@@ -172,8 +172,8 @@
             line-height: 30px;
             font-size: 0.7rem;
         }
-        @media (max-width: 992px) {
-            #sidebar { margin-left: calc(-1 * var(--sidebar-w)); }
+        @media (max-width: 991.98px) {
+            #sidebar { width: 100%; max-width: 320px; margin-left: -100%; }
             #sidebar.show { margin-left: 0; }
             #main-content { margin-left: 0; }
         }
@@ -226,7 +226,6 @@
             .modal-xl { max-width: 100%; margin: 0.5rem; }
             .topbar { padding-left: 1rem; padding-right: 1rem; }
             .brand-box { padding: 1rem; }
-            #sidebar { width: 100%; max-width: 320px; }
             .card-custom { border-radius: 8px; }
         }
         @media (max-width: 575.98px) {
