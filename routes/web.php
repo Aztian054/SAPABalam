@@ -47,8 +47,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ── Notifikasi Email (kirim ulang revisi ke pemohon) ──
-    // Dapat diakses seluruh petugas yang bertanggung jawab yang melihat detail tiket.
+    // Pemimpin tidak termasuk — hanya untuk monitoring, tanpa aksi email.
     Route::post('/tikets/{id}/kirim-notifikasi-revisi', [EmailNotificationController::class, 'kirimUlangRevisi'])
+        ->middleware('role:loket,verifikator,warkah,validator_btel,validator_suel,alih_media_btel,alih_media_suel')
         ->name('tikets.kirim_notifikasi_revisi');
     // ── Admin: DB Tiket Terpadu, User, Arsip ──
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {

@@ -49,7 +49,7 @@
                     <small class="text-muted">Email Pemohon</small>
                     <strong class="text-dark">
                         {{ $tiket->email_pemohon ?? '-' }}
-                        @if(!empty($tiket->email_pemohon) && $tiket->status === 'dikembalikan')
+                        @if(!empty($tiket->email_pemohon) && $tiket->status === 'dikembalikan' && auth()->user()?->role !== 'pemimpin')
                             <form action="{{ route('tikets.kirim_notifikasi_revisi', $tiket->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="btn btn-link btn-sm p-0 ms-1 text-primary" title="Kirim ulang notifikasi revisi ke email pemohon">
