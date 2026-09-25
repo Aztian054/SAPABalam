@@ -14,6 +14,10 @@
         .ttd { margin-top: 30px; display: flex; justify-content: space-between; }
         .ttd div { text-align: center; width: 30%; }
         .ttd .line { margin-top: 64px; border-top: 1px solid #111; padding-top: 6px; }
+        .no-print { margin-bottom: 10px; }
+        .btn-perbaikan { background: #0b2239; color: #fff; border: 0; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        .back-link { margin-left: 8px; }
+        .isi-revisi { margin: 8px 0 0; white-space: pre-wrap; }
         @media print {
             .no-print { display: none; }
             body { padding: 0; }
@@ -21,15 +25,12 @@
     </style>
 </head>
 <body>
-    <div class="no-print" style="margin-bottom:10px;">
-        <button onclick="window.print()" style="background:#0b2239;color:#fff;border:0;padding:8px 16px;border-radius:6px;cursor:pointer;">🖨 Cetak / Simpan PDF</button>
-        <a href="javascript:history.back()" style="margin-left:8px;">Kembali</a>
+    <div class="no-print">
+        <button onclick="window.print()" class="btn-perbaikan">🖨 Cetak / Simpan PDF</button>
+        <a href="javascript:history.back()" class="back-link">Kembali</a>
     </div>
 
-    <div class="header">
-        <div class="title">FORM PERMINTAAN PERBAIKAN / KELENGKAPAN BERKAS</div>
-        <div>Kantor Pertanahan Kota Bandar Lampung<br><small>Loket Pelayanan Pertanahan Elektronik</small></div>
-    </div>
+    @include('partials.kop_surat', ['subtitle' => 'FORM PERMINTAAN PERBAIKAN / KELENGKAPAN BERKAS'])
 
     <p style="margin-top:0;">Dengan hormat, bersama ini kami sampaikan bahwa berkas permohonan di bawah ini masih memerlukan <b>perbaikan / kelengkapan</b> sebelum dapat diproses ke tahap berikutnya:</p>
 
@@ -47,7 +48,7 @@
 
     <div class="box">
         <b>Uraian Perbaikan / Kelengkapan yang Diminta:</b>
-        <p style="margin:8px 0 0; white-space:pre-wrap;">{{ $lastRevisi?->isi_revisi ?? '—' }}</p>
+        <p class="isi-revisi">{{ $lastRevisi?->isi_revisi ?? '—' }}</p>
     </div>
 
     <p>

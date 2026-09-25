@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Pemimpin — Detail Tiket')
+@section('title', 'Pemimpin — Detail Berkas')
 
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h4 class="fw-bold mb-1"><i class="bi bi-ticket-perforated-fill text-primary me-2"></i>Detail Tiket Pemimpin</h4>
+        <h4 class="fw-bold mb-1"><i class="bi bi-ticket-perforated-fill text-primary me-2"></i>Detail Berkas Pemimpin</h4>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb small mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('pemimpin.index') }}">Pemimpin &mdash; Monitoring</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Detail Tiket</li>
+                <li class="breadcrumb-item active" aria-current="page">Detail Berkas</li>
             </ol>
         </nav>
     </div>
@@ -55,45 +55,7 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-7">
-        <div class="card card-custom mb-3">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-hourglass-split text-primary me-2"></i>Informasi SLA</h6>
-            </div>
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between border-bottom py-1">
-                    <small class="text-muted">Jenis Permohonan</small>
-                    <strong class="text-dark">{{ $tiket->jenisPermohonan?->nama ?? '-' }}</strong>
-                </div>
-                <div class="d-flex justify-content-between border-bottom py-1">
-                    <small class="text-muted">Batas SLA</small>
-                    <strong class="text-dark">{{ $tiket->jenisPermohonan?->batas_hari_sla ?? '-' }} hari</strong>
-                </div>
-                <div class="d-flex justify-content-between border-bottom py-1">
-                    <small class="text-muted">Tanggal Masuk</small>
-                    <strong class="text-dark">{{ $tiket->tanggal_masuk?->format('d/m/Y') ?? '-' }}</strong>
-                </div>
-                <div class="d-flex justify-content-between border-bottom py-1">
-                    <small class="text-muted">Target Selesai</small>
-                    <strong class="text-dark">{{ $tiket->tanggal_target_selesai?->format('d/m/Y') ?? '-' }}</strong>
-                </div>
-                @php
-                    $sisaHari = $tiket->tanggal_target_selesai
-                        ? (int) \Illuminate\Support\Carbon::today()->diffInDays($tiket->tanggal_target_selesai, false)
-                        : null;
-                @endphp
-                @if($sisaHari !== null && ! in_array($tiket->status, ['selesai', 'batal'], true))
-                    <div class="d-flex justify-content-between py-1">
-                        <small class="text-muted">Sisa Waktu</small>
-                        <strong class="text-{{ $sisaHari < 0 ? 'danger' : ($sisaHari <= 3 ? 'warning' : 'success') }}">
-                            {{ $sisaHari < 0 ? 'Terlambat ' . abs($sisaHari) . ' hari' : 'H - ' . $sisaHari }}
-                        </strong>
-                    </div>
-                @endif
-            </div>
-        </div>
     </div>
-</div>
 <div class="card card-custom mb-3">
     <div class="card-header bg-white py-3">
         <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-person-badge text-primary me-2"></i>Petugas &amp; Penugasan</h6>

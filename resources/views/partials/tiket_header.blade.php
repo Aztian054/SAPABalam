@@ -45,11 +45,6 @@
                 <div class="d-flex justify-content-between border-bottom py-1">
                     <small class="text-muted">No. HP</small><strong class="text-dark">{{ $tiket->no_hp_pemohon }}</strong>
                 </div>
-                @if($tiket->satuan_kerja)
-                <div class="d-flex justify-content-between border-bottom py-1">
-                    <small class="text-muted">Satker</small><strong class="text-dark">{{ $tiket->satuan_kerja }}</strong>
-                </div>
-                @endif
             </div>
             <div class="col-md-6">
                 <div class="d-flex justify-content-between border-bottom py-1">

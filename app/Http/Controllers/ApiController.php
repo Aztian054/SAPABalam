@@ -35,15 +35,12 @@ class ApiController extends Controller
                 'status_label' => $tiket->status_label,
                 'status_badge' => $tiket->status_badge,
                 'tanggal_masuk' => $tiket->tanggal_masuk->format('d/m/Y'),
-                'tanggal_target_selesai' => $tiket->tanggal_target_selesai?->format('d/m/Y'),
                 'tanggal_selesai' => $tiket->tanggal_selesai?->format('d/m/Y'),
                 'nama_pemohon' => $tiket->nama_pemohon,
-                'satuan_kerja' => $tiket->satuan_kerja,
                 'jenis_permohonan' => [
                     'kode' => $tiket->jenisPermohonan->kode,
                     'nama' => $tiket->jenisPermohonan->nama,
                     'kategori' => $tiket->jenisPermohonan->kategori,
-                    'sla_hari' => $tiket->jenisPermohonan->batas_hari_sla,
                 ],
                 'jumlah_bidang' => $tiket->jumlah_bidang,
                 'bidang_tanah' => $tiket->bidangTanahs->map(function ($b) {
@@ -53,7 +50,6 @@ class ApiController extends Controller
                         'no_sertifikat_elektronik' => $b->no_sertifikat_elektronik,
                         'jenis_hak' => $b->jenis_hak,
                         'nama_pemegang_hak' => $b->nama_pemegang_hak,
-                        'luas_m2' => $b->luas_m2,
                         'desa_kelurahan' => $b->desa_kelurahan,
                         'kecamatan' => $b->kecamatan,
                     ];
@@ -92,10 +88,6 @@ class ApiController extends Controller
                     'dikembalikan' => Tiket::where('status', 'dikembalikan')->count(),
                     'batal' => Tiket::where('status', 'batal')->count(),
                 ],
-                'overdue_sla' => Tiket::whereNotIn('status', ['selesai', 'batal'])
-                    ->whereNotNull('tanggal_target_selesai')
-                    ->whereDate('tanggal_target_selesai', '<', $today)
-                    ->count(),
             ],
         ]);
     }

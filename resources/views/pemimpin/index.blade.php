@@ -7,7 +7,7 @@
     <div>
         <h4 class="fw-bold mb-1"><i class="bi bi-clipboard-data text-primary me-2"></i>Monitoring &amp; Evaluasi</h4>
         <p class="text-muted small mb-0">
-            Selamat datang, <strong>{{ auth()->user()->name }}</strong> &mdash; ringkasan layanan, beban kerja, dan tiket yang sedang berjalan.
+            Selamat datang, <strong>{{ auth()->user()->name }}</strong> &mdash; ringkasan layanan, beban kerja, dan berkas yang sedang berjalan.
         </p>
     </div>
     <div class="d-flex gap-2">
@@ -20,11 +20,6 @@
     </div>
 </div>
 
-@php
-    $persenTepat = $selesaiTotal > 0 ? round(($tepatWaktu / $selesaiTotal) * 100) : 0;
-    $persenPending = $selesaiTotal > 0 ? round((($selesaiTotal - $tepatWaktu) / $selesaiTotal) * 100) : 0;
-@endphp
-
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
         <div class="card card-custom p-3 h-100">
@@ -35,30 +30,6 @@
                     <small class="text-muted">Total sertifikat elek. terbit</small>
                 </div>
                 <span class="badge bg-success rounded-circle p-3"><i class="bi bi-check2-circle fs-4 text-white"></i></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="card card-custom p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted text-uppercase fw-semibold">Tepat Waktu</small>
-                    <h3 class="fw-bold text-success mb-0">{{ $persenTepat }}<small class="fs-6">%</small></h3>
-                    <small class="text-muted">{{ $tepatWaktu }} dari {{ $selesaiTotal }} sesuai SLA</small>
-                </div>
-                <span class="badge bg-info rounded-circle p-3"><i class="bi bi-stopwatch fs-4 text-white"></i></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="card card-custom p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted text-uppercase fw-semibold">Overdue / Tertunda</small>
-                    <h3 class="fw-bold text-danger mb-0">{{ $overdue }}</h3>
-                    <small class="text-muted">Melewati tanggal target</small>
-                </div>
-                <span class="badge bg-danger rounded-circle p-3"><i class="bi bi-exclamation-triangle fs-4 text-white"></i></span>
             </div>
         </div>
     </div>
@@ -122,7 +93,7 @@
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm rounded-3 w-100"><i class="bi bi-funnel me-1"></i> Tampilkan</button>
+                <button type="submit" class="btn btn-gold btn-sm rounded-3 w-100"><i class="bi bi-funnel me-1"></i> Tampilkan</button>
                 @if(request()->hasAny('q', 'status'))
                     <a href="{{ route('pemimpin.index') }}" class="btn btn-outline-secondary btn-sm rounded-3">Reset</a>
                 @endif
@@ -189,8 +160,8 @@
 </div>
 <div class="card card-custom">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-check text-primary me-2"></i>Daftar Tiket Permohonan</h6>
-        <span class="badge bg-light border text-dark">{{ $tikets->count() }} tiket</span>
+        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-check text-primary me-2"></i>Daftar Berkas Permohonan</h6>
+        <span class="badge bg-light border text-dark">{{ $tikets->count() }} berkas</span>
     </div>
     <div class="table-responsive">
         <table class="table table-hover table-sm align-middle mb-0">
@@ -202,7 +173,6 @@
                     <th>Status</th>
                     <th>Petugas Loket</th>
                     <th>Masuk</th>
-                    <th>Target</th>
                     <th></th>
                 </tr>
             </thead>
@@ -215,7 +185,6 @@
                         <td><span class="badge bg-{{ $t->status_badge }} text-uppercase">{{ $t->status_label }}</span></td>
                         <td class="small">{{ $t->petugasLoket?->name ?? '-' }}</td>
                         <td class="small">{{ $t->tanggal_masuk?->format('d/m/Y') }}</td>
-                        <td class="small">{{ $t->tanggal_target_selesai?->format('d/m/Y') }}</td>
                         <td class="text-end">
                             <a href="{{ route('pemimpin.show', $t->id) }}" class="btn btn-outline-primary btn-sm rounded-3">
                                 <i class="bi bi-eye"></i>
@@ -223,7 +192,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-muted py-4">Tidak ada tiket yang cocok dengan filter saat ini.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Tidak ada berkas yang cocok dengan filter saat ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

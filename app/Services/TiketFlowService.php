@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CatatanRevisi;
+use App\Models\LembarKerjaWarkah;
 use App\Models\RiwayatStatus;
 use App\Models\Tiket;
 use App\Models\TiketPenugasan;
@@ -32,17 +33,19 @@ class TiketFlowService
     /**
      * Tahap prasyarat yang WAJIB selesai sebelum sebuah tahap boleh meng-Add tiket.
      *
-     * Konfigurasi Alur Paralel (dokumen Alur_00 + PRD 2.2):
+     * Konfigurasi Alur Paralel + revisi pengembalian berkas BT/SU:
      *  - Verifikator ║ Warkah TIDAK saling menunggu (warkah berkas []).
      *  - Validator BT/SU dibuka oleh flag `diserahkan_ke_validator` dari Warkah
      *    (dicek terpisah di assertCanClaim) — tanpa menunggu Verifikator.
-     *  - Alih Media BT/SU membutuhkan SEMUA tahap selesai (gate AND penuh).
+     *  - Alih Media BT/SU mulai setelah Verifikator + Validator BT/SU selesai
+     *    (Warkah berperan lewat flag KIRIM `diserahkan_ke_validator`, bukan via
+     *    selesainya tahap Warkah — Warkah baru selesai setelah berkas dikembalikan).
      */
     public const STAGE_GATES = [
         'verifikasi' => [], // tiket dari Loket; syarat: status diterima (belum pernah diverifikasi)
-        'warkah' => [], // paralel dengan Verifikator — tidak saling menunggu
-        'validasi_btel' => [], // dibuka flag diserahkan_ke_validator (custom)
-        'validasi_suel' => [], // dibuka flag diserahkan_ke_validator (custom)
+        'warkah' => ['verifikasi'], // BARU: Warkah harus menunggu Verifikasi selesai (tidak paralel lagi)
+        'validasi_btel' => ['warkah'], // BARU: Validator BT menunggu Warkah selesai diserahkan
+        'validasi_suel' => ['warkah'], // BARU: Validator SU menunggu Warkah selesai diserahkan
         'alih_media_btel' => ['verifikasi', 'warkah', 'validasi_btel', 'validasi_suel'],
         'alih_media_suel' => ['verifikasi', 'warkah', 'validasi_btel', 'validasi_suel'],
     ];
@@ -54,9 +57,9 @@ class TiketFlowService
      */
     public const STAGE_GATES_VISIBLE = [
         'verifikasi' => [],
-        'warkah' => [], // paralel: langsung terlihat begitu masuk DB Admin
-        'validasi_btel' => [], // khusus: filter diserahkan_ke_validator = true
-        'validasi_suel' => [], // khusus: filter diserahkan_ke_validator = true
+        'warkah' => ['verifikasi'], // BARU: Warkah terlihat setelah Verifikasi selesai
+        'validasi_btel' => ['warkah'], // BARU: Validator BT terlihat setelah Warkah selesai
+        'validasi_suel' => ['warkah'], // BARU: Validator SU terlihat setelah Warkah selesai
         'alih_media_btel' => ['verifikasi', 'warkah'],
         'alih_media_suel' => ['verifikasi', 'warkah'],
     ];
@@ -97,7 +100,8 @@ class TiketFlowService
         }
 
         // Validator BT/SU khusus: hanya tiket yang telah Warkah SERAHKAN
-        // (diserahkan_ke_validator = true) — tanpa menunggu Verifikator.
+        // (diserahkan_ke_validator = true) DAN Warkah sudah selesai tahap diserahkan.
+        // ALUR BARU: Validator harus menunggu Warkah selesai (sudah ditangani di STAGE_GATES)
         if (in_array($stage, ['validasi_btel', 'validasi_suel'], true)) {
             $query->where('diserahkan_ke_validator', true);
         }
@@ -209,7 +213,7 @@ class TiketFlowService
             // 2. Anti-duplikat.
             $existing = $tiket->penugasanAktif($stage);
             if ($existing) {
-                throw new \RuntimeException("Tiket {$tiket->kode_tiket} sedang diproses akun lain pada tahap ini.");
+                throw new \RuntimeException("Berkas {$tiket->kode_tiket} sedang diproses akun lain pada tahap ini.");
             }
 
             // 3. Buat penugasan baru.
@@ -236,7 +240,7 @@ class TiketFlowService
                 'stage_dari' => 'DB Admin',
                 'stage_ke' => $stage,
                 'changed_by' => $user->id,
-                'keterangan' => "Tiket di-Add oleh {$user->name} (tahap {$stage}).",
+                'keterangan' => "Berkas di-Add oleh {$user->name} (tahap {$stage}).",
             ]);
 
             return $penugasan;
@@ -250,11 +254,19 @@ class TiketFlowService
     {
         $stage = $this->stageForUser($user);
 
+        // Alur revisi Warkah: tahap Warkah hanya bisa dinyatakan selesai
+        // setelah pengembalian fisik berkas BT/SU tercatat (dikembalikan).
+        if ($stage === 'warkah' && ! $this->isPengembalianConfirmed($tiket)) {
+            throw new \RuntimeException(
+                "Berkas {$tiket->kode_tiket} belum dicatat pengembalian berkas BT/SU-nya ke Warkah; tahap Warkah belum dapat diselesaikan."
+            );
+        }
+
         DB::transaction(function () use ($user, $tiket, $stage, $catatan) {
             $penugasan = $tiket->penugasanAktif($stage);
 
             if (! $penugasan) {
-                throw new \RuntimeException("Tiket {$tiket->kode_tiket} tidak sedang dalam antrian Anda.");
+                throw new \RuntimeException("Berkas {$tiket->kode_tiket} tidak sedang dalam antrian Anda.");
             }
             if ($penugasan->user_id !== $user->id) {
                 throw new \RuntimeException('Anda tidak berhak menyelesaikan penugasan milik akun lain.');
@@ -273,7 +285,7 @@ class TiketFlowService
                 'stage_dari' => $stage,
                 'stage_ke' => $tiket->status === 'selesai' ? 'selesai' : 'DB Admin',
                 'changed_by' => $user->id,
-                'keterangan' => "Tiket {$tiket->kode_tiket} selesai pada tahap {$stage}.".($catatan ? " Catatan: {$catatan}" : ''),
+                'keterangan' => "Berkas {$tiket->kode_tiket} selesai pada tahap {$stage}.".($catatan ? " Catatan: {$catatan}" : ''),
             ]);
         });
     }
@@ -289,7 +301,7 @@ class TiketFlowService
             $penugasan = $tiket->penugasanAktif($stage);
 
             if (! $penugasan) {
-                throw new \RuntimeException("Tiket {$tiket->kode_tiket} tidak sedang dalam antrian Anda.");
+                throw new \RuntimeException("Berkas {$tiket->kode_tiket} tidak sedang dalam antrian Anda.");
             }
             if ($penugasan->user_id !== $user->id) {
                 throw new \RuntimeException('Anda tidak berhak mengembalikan penugasan milik akun lain.');
@@ -322,7 +334,7 @@ class TiketFlowService
                 'stage_dari' => $stage,
                 'stage_ke' => 'dikembalikan',
                 'changed_by' => $user->id,
-                'keterangan' => "Tiket dikembalikan untuk revisi ke-{$revisiKe}: {$isiRevisi}",
+                'keterangan' => "Berkas dikembalikan untuk revisi ke-{$revisiKe}: {$isiRevisi}",
             ]);
         });
     }
@@ -403,31 +415,39 @@ class TiketFlowService
     protected function assertCanClaim(Tiket $tiket, string $stage): void
     {
         if (in_array($tiket->status, ['selesai', 'batal'], true)) {
-            throw new \RuntimeException('Tiket sudah selesai/dibatalkan dan tidak dapat diambil.');
+            throw new \RuntimeException('Berkas sudah selesai/dibatalkan dan tidak dapat diambil.');
         }
 
         // Validator BT/SU dibuka oleh flag diserahkan_ke_validator dari Warkah
         // (paralel, TANPA menunggu Verifikator).
         if (in_array($stage, ['validasi_btel', 'validasi_suel'], true) && ! $tiket->isDiserahkanKeValidator()) {
             throw new \RuntimeException(
-                "Tiket {$tiket->kode_tiket} belum diserahkan oleh Warkah ke Validator (diserahkan_ke_validator belum aktif); belum dapat diproses di tahap {$stage}."
+                "Berkas {$tiket->kode_tiket} belum diserahkan oleh Warkah ke Validator (diserahkan_ke_validator belum aktif); belum dapat diproses di tahap {$stage}."
+            );
+        }
+
+        // Alih Media juga bergantung pada KIRIM berkas dari Warkah
+        // (flag diserahkan_ke_validator) — Warkah tidak harus "selesai" lebih dulu.
+        if (in_array($stage, ['alih_media_btel', 'alih_media_suel'], true) && ! $tiket->isDiserahkanKeValidator()) {
+            throw new \RuntimeException(
+                "Berkas {$tiket->kode_tiket} belum diserahkan berkas BT/SU-nya oleh Warkah; belum dapat diproses di tahap {$stage}."
             );
         }
 
         // Tahap yang sudah selesai tidak boleh diproses ulang, kecuali ada revisi
         // yang masih menunggu tahap yang sama (ke_stage = tahap ini).
         if ($stage !== 'verifikasi' && $tiket->isStageSelesai($stage) && ! $this->hasPendingRevisiForStage($tiket, $stage)) {
-            throw new \RuntimeException("Tiket {$tiket->kode_tiket} sudah selesai pada tahap {$stage} dan tidak dapat di-Add ulang.");
+            throw new \RuntimeException("Berkas {$tiket->kode_tiket} sudah selesai pada tahap {$stage} dan tidak dapat di-Add ulang.");
         }
 
         foreach (self::STAGE_GATES[$stage] as $needStage) {
             if (! $tiket->isStageSelesai($needStage)) {
-                throw new \RuntimeException("Tiket {$tiket->kode_tiket} belum selesai pada tahap {$needStage}; belum dapat diproses di tahap {$stage}.");
+                throw new \RuntimeException("Berkas {$tiket->kode_tiket} belum selesai pada tahap {$needStage}; belum dapat diproses di tahap {$stage}.");
             }
         }
 
         if ($stage === 'verifikasi' && $tiket->isStageSelesai('verifikasi') && ! $this->hasPendingRevisiForStage($tiket, 'verifikasi')) {
-            throw new \RuntimeException("Tiket {$tiket->kode_tiket} sudah pernah diverifikasi.");
+            throw new \RuntimeException("Berkas {$tiket->kode_tiket} sudah pernah diverifikasi.");
         }
     }
 
@@ -459,30 +479,54 @@ class TiketFlowService
     /**
      * Atur status tiket setelah sebuah tahap dinyatakan selesai.
      * Alur paralel: status menyesuaikan tahap paralel yang masih aktif,
-     * atau kembali ke DB Admin, atau Selesai total saat BT & SU beres.
+     * atau kembali ke DB Admin, atau Selesai total saat Alih Media BT & SU
+     * beres DAN berkas BT/SU sudah dikembalikan ke Warkah.
      */
     protected function resolveStatusAfterDone(Tiket $tiket, string $stage): void
     {
         $update = [];
         $next = $this->activeStageStatus($tiket);
 
-        if (in_array($stage, ['verifikasi', 'warkah'], true)) {
-            // Paralel: jangan timpa status tahap lain yang masih diproses.
+        if ($stage === 'verifikasi') {
+            // ALUR BARU 2026: Verifikasi selesai → kembali ke diterima (menunggu Warkah mulai)
             $update['status'] = $next ?? 'diterima';
+        } elseif ($stage === 'warkah') {
+            // Warkah selesai selalu SETELAH berkas BT/SU dikembalikan.
+            // Bila Alih Media BT & SU sudah beres, seluruh proses selesai.
+            if ($tiket->isStageSelesai('alih_media_btel') && $tiket->isStageSelesai('alih_media_suel') && $this->isPengembalianConfirmed($tiket)) {
+                $update['status'] = 'selesai';
+                $update['tanggal_selesai'] = now()->toDateString();
+            } else {
+                $update['status'] = $next ?? 'diterima';
+            }
         } elseif ($stage === 'validasi_btel') {
             $update['status_pra_btel'] = 'selesai';
             $update['status'] = $next ?? 'diterima';
         } elseif ($stage === 'validasi_suel') {
             $update['status_pra_suel'] = 'selesai';
             $update['status'] = $next ?? 'diterima';
-        } elseif ($stage === 'alih_media_btel') {
-            $update['status'] = $next ?? ($tiket->isStageSelesai('alih_media_suel') ? 'selesai' : 'diterima');
-            $update['tanggal_selesai'] = $update['status'] === 'selesai' ? now()->toDateString() : $tiket->tanggal_selesai;
-        } elseif ($stage === 'alih_media_suel') {
-            $update['status'] = $next ?? ($tiket->isStageSelesai('alih_media_btel') ? 'selesai' : 'diterima');
-            $update['tanggal_selesai'] = $update['status'] === 'selesai' ? now()->toDateString() : $tiket->tanggal_selesai;
+        } elseif ($stage === 'alih_media_btel' || $stage === 'alih_media_suel') {
+            // Alih Media beres → tiket SELESAI hanya bila BT & SU keduanya beres
+            // DAN Warkah telah mencatat pengembalian berkas hardcopy.
+            $bothBeres = $tiket->isStageSelesai('alih_media_btel') && $tiket->isStageSelesai('alih_media_suel');
+            if ($bothBeres && $this->isPengembalianConfirmed($tiket)) {
+                $update['status'] = 'selesai';
+                $update['tanggal_selesai'] = now()->toDateString();
+            } else {
+                // Warkah masih memegang tiket (menunggu pengembalian hardcopy)
+                // → status kembali ikut tahap paralel paling awal yang aktif.
+                $update['status'] = $next ?? 'diterima';
+            }
         }
 
         $tiket->update($update);
+    }
+
+    /** Apakah Warkah telah mencatat pengembalian fisik berkas BT/SU (dikembalikan). */
+    public function isPengembalianConfirmed(Tiket $tiket): bool
+    {
+        return LembarKerjaWarkah::where('tiket_id', $tiket->id)
+            ->where('status_pengembalian', 'dikembalikan')
+            ->exists();
     }
 }

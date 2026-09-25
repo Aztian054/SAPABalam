@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ArsipFolder;
 use App\Models\ArsipTiket;
 use App\Models\BidangTanah;
+use App\Models\JenisHak;
 use App\Models\JenisPermohonan;
 use App\Models\RiwayatStatus;
 use App\Models\Tiket;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -67,7 +69,10 @@ class AdminController extends Controller
             $tp['monitor_sertipikat'] = $tp->lembarKerjaWarkahs->last()?->status_sertipikat;
         }
 
-        return view('admin.index', compact('tikets', 'stats'));
+        $jenisPermohonans = JenisPermohonan::where('is_active', true)->with('persyaratanDokumens')->get();
+        $jenisHaks = JenisHak::where('is_active', true)->orderBy('urutan')->orderBy('kode')->get();
+
+        return view('admin.index', compact('tikets', 'stats', 'jenisPermohonans', 'jenisHaks'));
     }
 
     // ---------------- Menu Selesai (migrasi ke arsip) ----------------
@@ -146,6 +151,7 @@ class AdminController extends Controller
             'tikets' => $tikets,
             'tahuns' => $this->tahunSelesaiOptions(),
             'jenisPermohonans' => JenisPermohonan::where('is_active', true)->orderBy('nama')->get(),
+            'jenisHaks' => JenisHak::where('is_active', true)->orderBy('urutan')->orderBy('kode')->get(),
             'petugasList' => $this->petugasSelesaiOptions(),
             'folders' => ArsipFolder::orderBy('nama_folder')->get(),
         ]);
@@ -183,7 +189,7 @@ class AdminController extends Controller
         }
 
         if ($targetIds->isEmpty()) {
-            return back()->with('warning', 'Tidak ada tiket selesai yang dipilih untuk diarsipkan.');
+            return back()->with('warning', 'Tidak ada berkas selesai yang dipilih untuk diarsipkan.');
         }
 
         $gebyah = DB::transaction(function () use ($targetIds, $folder, $namaArsip, $validated) {
@@ -209,7 +215,7 @@ class AdminController extends Controller
                         'stage_dari' => 'DB Admin',
                         'stage_ke' => 'Arsip',
                         'changed_by' => Auth::id(),
-                        'keterangan' => "Tiket diarsipkan massal ke folder {$folder->nama_folder} ({$namaArsip}).",
+                        'keterangan' => "Berkas diarsipkan massal ke folder {$folder->nama_folder} ({$namaArsip}).",
                     ]);
 
                     $jumlah++;
@@ -218,7 +224,7 @@ class AdminController extends Controller
             return $jumlah;
         });
 
-        return back()->with('success', "{$gebyah} tiket selesai berhasil diarsipkan massal ke folder {$folder->nama_folder}.");
+        return back()->with('success', "{$gebyah} berkas selesai berhasil diarsipkan massal ke folder {$folder->nama_folder}.");
     }
 
     // ---------------- Menu Revisi (Admin melihat semua revisi) ----------------
@@ -247,7 +253,7 @@ class AdminController extends Controller
         $tiket = Tiket::findOrFail($id);
 
         if ($tiket->status !== 'dikembalikan') {
-            return back()->with('error', 'Tiket ini bukan berstatus revisi.');
+            return back()->with('error', 'Berkas ini bukan berstatus revisi.');
         }
 
         $tiket->update(['status' => 'diterima', 'status_pembetulan' => $tiket->status_pembetulan ?? 'P1']);
@@ -257,18 +263,19 @@ class AdminController extends Controller
             'stage_dari' => 'Revisi',
             'stage_ke' => 'DB Admin',
             'changed_by' => Auth::id(),
-            'keterangan' => 'Revisi dihapus oleh Admin; tiket dikembalikan ke Database Admin tanpa status revisi.',
+            'keterangan' => 'Revisi dihapus oleh Admin; berkas dikembalikan ke Database Admin tanpa status revisi.',
         ]);
 
-        return back()->with('success', "Revisi tiket {$tiket->kode_tiket} dihapus; tiket kembali menunggu di Database Admin.");
+        return back()->with('success', "Revisi berkas {$tiket->kode_tiket} dihapus; berkas kembali menunggu di Database Admin.");
     }
 
     // ---------------- Tambah Tiket Khusus (menu Admin) ----------------
+    /**
+     * Deprecated (V2.1): pembuatan tiket dipindah ke modal di halaman index.
+     */
     public function createTiket()
     {
-        $jenisPermohonans = JenisPermohonan::where('is_active', true)->with('persyaratanDokumens')->get();
-
-        return view('admin.create_tiket', compact('jenisPermohonans'));
+        return redirect()->route('admin.index');
     }
 
     public function storeTiket(Request $request)
@@ -280,7 +287,6 @@ class AdminController extends Controller
             'nama_pemohon' => 'required|string|max:200',
             'nik_pemohon' => 'nullable|string|max:20',
             'no_hp_pemohon' => 'required|string|max:20',
-            'satuan_kerja' => 'nullable|string|max:200',
             'no_hak_sekarang' => 'nullable|string|max:100',
             'no_hak_sebelumnya' => 'nullable|string',
             'kelurahan_desa' => 'nullable|string|max:100',
@@ -290,9 +296,8 @@ class AdminController extends Controller
             'bidang' => 'required|array|min:1',
             'bidang.*.nib' => 'nullable|string|max:50',
             'bidang.*.no_sertifikat_lama' => 'nullable|string|max:100',
-            'bidang.*.jenis_hak' => 'nullable|in:HM,HGB,HGU,HP,HPL',
+            'bidang.*.jenis_hak' => ['nullable', Rule::in(JenisHak::where('is_active', true)->pluck('kode')->all() ?: ['HM', 'HGB', 'HGU', 'HP', 'HPL'])],
             'bidang.*.nama_pemegang_hak' => 'nullable|string|max:200',
-            'bidang.*.luas_m2' => 'nullable|numeric|min:0',
             'bidang.*.desa_kelurahan' => 'nullable|string|max:100',
             'bidang.*.kecamatan' => 'nullable|string|max:100',
         ]);
@@ -312,7 +317,6 @@ class AdminController extends Controller
                 'nama_pemohon' => $validated['nama_pemohon'],
                 'nik_pemohon' => $validated['nik_pemohon'] ?? null,
                 'no_hp_pemohon' => $validated['no_hp_pemohon'],
-                'satuan_kerja' => $validated['satuan_kerja'] ?? null,
                 'no_hak_sekarang' => $validated['no_hak_sekarang'] ?? null,
                 'no_hak_sebelumnya' => $validated['no_hak_sebelumnya'] ?? null,
                 'kelurahan_desa' => $validated['kelurahan_desa'] ?? null,
@@ -323,7 +327,6 @@ class AdminController extends Controller
                 'nomor_telepon' => $validated['no_hp_pemohon'],
                 'created_by' => $user->id,
                 'status' => 'diterima',
-                'tanggal_target_selesai' => $today->copy()->addDays($jp->batas_hari_sla),
                 'keterangan' => $validated['keterangan'] ?? null,
             ]);
 
@@ -334,7 +337,6 @@ class AdminController extends Controller
                     'no_sertifikat_lama' => $b['no_sertifikat_lama'] ?? null,
                     'jenis_hak' => $b['jenis_hak'] ?? null,
                     'nama_pemegang_hak' => $b['nama_pemegang_hak'] ?? null,
-                    'luas_m2' => $b['luas_m2'] ?? null,
                     'desa_kelurahan' => $b['desa_kelurahan'] ?? ($validated['kelurahan_desa'] ?? null),
                     'kecamatan' => $b['kecamatan'] ?? ($validated['kecamatan'] ?? null),
                     'urutan' => $i + 1,
@@ -346,11 +348,11 @@ class AdminController extends Controller
                 'stage_dari' => 'Admin',
                 'stage_ke' => 'DB Admin',
                 'changed_by' => $user->id,
-                'keterangan' => 'Tiket ditambahkan langsung oleh Admin. Berkas berada di Database Admin.',
+                'keterangan' => 'Berkas ditambahkan langsung oleh Admin dan berada di Database Admin.',
             ]);
 
             return redirect()->route('admin.show', $tiket->id)
-                ->with('success', "Tiket {$tiket->kode_tiket} berhasil ditambahkan ke Database Admin.");
+                ->with('success', "Berkas {$tiket->kode_tiket} berhasil ditambahkan ke Database Admin.");
         });
     }
 
@@ -397,10 +399,10 @@ class AdminController extends Controller
             'stage_dari' => 'DB Admin',
             'stage_ke' => 'Arsip',
             'changed_by' => Auth::id(),
-            'keterangan' => "Tiket diarsipkan ke folder {$request->nama_arsip}.",
+            'keterangan' => "Berkas diarsipkan ke folder {$request->nama_arsip}.",
         ]);
 
-        return back()->with('success', "Tiket {$tiket->kode_tiket} berhasil diarsipkan.");
+        return back()->with('success', "Berkas {$tiket->kode_tiket} berhasil diarsipkan.");
     }
 
     // ---------------- Manajemen Arsip Folder ----------------
@@ -444,7 +446,7 @@ class AdminController extends Controller
             'username' => 'required|string|max:50|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
-            'role' => 'required|in:'.implode(',', array_keys(User::ROLES)),
+            'role' => 'required|in:'.implode(',', array_keys(User::rolesNonAdmin())),
             'nip' => 'nullable|string|max:30',
             'no_hp' => 'nullable|string|max:20',
         ]);
@@ -454,6 +456,8 @@ class AdminController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            // Salinan plaintext untuk pandangan admin (kolom password_text).
+            'password_text' => $request->password,
             'role' => $request->role,
             'nip' => $request->nip,
             'no_hp' => $request->no_hp,
@@ -463,9 +467,67 @@ class AdminController extends Controller
         return back()->with('success', "Akun {$request->name} berhasil dibuat.");
     }
 
+    /** Formulir edit akun — jabatan (role) tidak dapat diubah. */
+    public function usersEdit(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        return view('admin.users_edit', compact('user'));
+    }
+
+    public function usersUpdate(Request $request, int $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:200',
+            'username' => 'required|string|max:50|unique:users,username,'.$user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'password' => 'nullable|min:6',
+            'nip' => 'nullable|string|max:30',
+            'no_hp' => 'nullable|string|max:20',
+        ]);
+
+        $data = $request->only(['name', 'username', 'email', 'nip', 'no_hp']);
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+            // Sinkronkan salinan plaintext agar tetap sinkron dengan hash (migrasi 2026_09_15).
+            $data['password_text'] = $request->password;
+        }
+
+        // Jabatan akun yang sudah dibuat tidak pernah diubah agar RBAC & alur tiket tidak rusak.
+        $user->update($data);
+
+        return redirect()->route('admin.users')->with('success', "Data akun {$user->name} berhasil diperbarui.");
+    }
+
+    public function usersHapus(Request $request, int $id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role === 'admin') {
+            return back()->with('error', 'Akun admin tidak dapat dihapus.');
+        }
+
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun yang sedang digunakan.');
+        }
+
+        $nama = $user->name;
+        $user->delete();
+
+        return back()->with('success', "Akun {$nama} berhasil dihapus.");
+    }
+
     public function usersToggle(Request $request, int $id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->role === 'admin') {
+            return back()->with('error', 'Status akun admin tidak dapat diubah.');
+        }
+
         $user->update(['is_active' => ! $user->is_active]);
 
         return back()->with('success', "Status akun {$user->name} diperbarui.");

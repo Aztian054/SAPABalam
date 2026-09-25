@@ -7,7 +7,7 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th><th>NIB</th><th>No. Sertifikat Lama</th><th>No. Sertifikat El.</th>
-                    <th>Jenis Hak</th><th>Pemegang Hak</th><th>Luas (m²)</th><th>Kelurahan</th>
+                    <th>Jenis Hak</th><th>Pemegang Hak</th><th>Kelurahan</th>
                 </tr>
             </thead>
             <tbody>
@@ -19,11 +19,10 @@
                         <td>{{ $b->no_sertifikat_elektronik ?? '-' }}</td>
                         <td>{{ $b->jenis_hak ?? '-' }}</td>
                         <td>{{ $b->nama_pemegang_hak ?? '-' }}</td>
-                        <td>{{ number_format($b->luas_m2 ?? 0, 2) }}</td>
                         <td>{{ $b->desa_kelurahan ?? '-' }}, {{ $b->kecamatan ?? '-' }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-muted py-4">Belum ada data bidang tanah.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Belum ada data bidang tanah.</td></tr>
                 @endforelse
             </tbody>
         </table>

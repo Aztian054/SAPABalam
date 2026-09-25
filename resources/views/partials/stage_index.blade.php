@@ -29,7 +29,7 @@
     <div class="col-6 col-md-2">
         <div class="card card-custom p-3 text-center">
             <div class="fw-bold fs-4 text-success">{{ $stats['lengkap'] }}</div>
-            <small class="text-muted">Tiket Selesai</small>
+            <small class="text-muted">Berkas Selesai</small>
         </div>
     </div>
     <div class="col-6 col-md-2">
@@ -44,7 +44,7 @@
     <i class="bi bi-database-fill-add fs-4 me-3"></i>
     <div class="w-100">
         <strong>Pola Kerja {{ $stageLabel }}</strong>
-        <span class="d-block small">Cari tiket di Database Admin <span class="badge bg-primary rounded-pill">{{ $stats['total_db'] }}</span> tiket tersedia →
+        <span class="d-block small">Cari berkas di Database Admin <span class="badge bg-primary rounded-pill">{{ $stats['total_db'] }}</span> berkas tersedia →
             klik <b>Add</b> untuk mengambil → proses → <b>Proses Selesai</b> → kembali ke DB Admin.</span>
     </div>
 </div>
@@ -102,7 +102,7 @@
                 </div>
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary"><i class="bi bi-search me-1"></i>Cari & Add</button>
+                <button class="btn btn-gold"><i class="bi bi-search me-1"></i>Cari & Add</button>
             </div>
         </form>
 <div class="card card-custom mb-4">
@@ -115,8 +115,8 @@
     @if($activeTikets->isEmpty())
         <div class="card-body text-center text-muted py-5">
             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-            Belum ada tiket dalam antrian Anda.<br>
-            <small>Gunakan Smart Search di atas lalu klik <b>Add</b> untuk mengambil tiket dari Database Admin.</small>
+            Belum ada berkas dalam antrian Anda.<br>
+            <small>Gunakan Smart Search di atas lalu klik <b>Add</b> untuk mengambil berkas dari Database Admin.</small>
         </div>
     @else
         <div class="table-responsive">
@@ -135,7 +135,7 @@
                             <td><small>{{ $t->penugasans->where('status', 'proses')->first()?->tanggal_add?->format('d/m/Y H:i') }}</small></td>
                             <td><span class="badge bg-{{ $t->status_badge }}">{{ $t->status_label }}</span></td>
                             <td class="text-end">
-                                <a href="{{ route($routeBase . '.show', $t->id) }}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square me-1"></i>Proses</a>
+                                <a href="{{ route($routeBase . '.show', $t->id) }}" class="btn btn-sm btn-gold"><i class="bi bi-pencil-square me-1"></i>Proses</a>
                             </td>
                         </tr>
                     @endforeach

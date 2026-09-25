@@ -9,10 +9,14 @@ Dokumen ini menjelaskan alur, menu, dan fungsi akun **Warkah** — penyedia data
 Warkah adalah **jabatan** yang menyiapkan data pendukung **Buku Tanah (BT) dan Surat Ukur (SU) sekaligus** untuk setiap tiket. Jabatan ini boleh dipakai oleh **banyak akun**; setiap akun hanya melihat & mengerjakan tiket di daftar pribadinya (Exclusive Claim per jabatan).
 
 ```
-DB ADMIN ──▶ WARKAH (Stage 3) ║ VERIFIKATOR (Stage 2, paralel) ──▶ VALIDATOR (Stage 4A/4B)
+DB ADMIN ──▶ WARKAH FASE 1 ──▶ VALIDATOR ║ SU ──▶ ALIH MEDIA ║ SU ──▶ WARKAH FASE 2 ──▶ SELESAI
+                  ↑                                            |
+                  └──────────── SEKUENSIAL ────────────────────┘
 ```
 
-> **Paralel:** Warkah bekerja **bersamaan** dengan Verifikator. Setelah Warkah selesai **dan menandai `diserahkan_ke_validator`**, tiket siap di-Add **kedua Validator** (BT & SU) — **tanpa menunggu Verifikator**.
+> **2 FASE SEKUENSIAL:**
+> - **Fase 1:** Siapkan data → serahkan ke Validator (`diserahkan_ke_validator = true`)
+> - **Fase 2:** Terima pengembalian dari Alih Media → **TRIGGER SELESAI TOTAL**
 
 ---
 
@@ -27,19 +31,40 @@ Halaman menyajikan seksi **Daftar (Antrian Aktif Saya) / Revisi Menunggu / Riway
 
 ---
 
-## 3. Alur Kerja Warkah
+## 4. Gate/Aturan di Kode (TiketFlowService.php)
 
+```php
+'warkah' => ['verifikasi'],  // SEKUENSIAL: Warkah HARUS tunggu Verifikasi selesai
+
+STATUS_PENGEMBALIAN = [
+    'belum_diserahkan' => 'Belum Diserahkn',
+    'dipinjam'         => 'Dipinjam (di Validator/Alih Media)',
+    'dikembalikan'     => 'Berkas Telah Dikembalikan',  // ← TRIGGER SELESAI
+];
 ```
-1. Warkah mencari tiketnya di Daftar Tiket Admin → klik "Add"
-   → tiket masuk Daftar Tiket Warkah milik akun sendiri.
-2. Buka detail tiket → buka form "Lembar Kerja Warkah".
-3. Menyiapkan data pendukung BT & SU.
-4. Isi status sertipikat, status dokumen BT / SU, tanggal serah/kembali.
-5. Aksi "Serahkan ke Validator" → status sertipikat `DISERAHKAN`
-   + `diserahkan_ke_validator = true`.
-6. Proses Selesai → tiket kembali ke Daftar Tiket Admin
-   (siap di-Add kedua Validator — tanpa menunggu Verifikator).
+
+---
+
+## 5. Alur Kerja Warkah (2 FASE)
+
+### Fase 1: Serahkan ke Validator
 ```
+1. Cari tiket di DB Admin (gate: Verifikasi HARUS selesai)
+2. Klik "Add" → masuk Daftar Tiket Warkah
+3. Buka detail → Form Lembar Kerja Warkah
+4. Siapkan data BT & SU → Isi status, tanggal, dsb
+5. Aksi "Serahkan ke Validator" → status = 'DISERAHKAN', flag `diserahkan_ke_validator = true`
+6. Klik "Selesai" → tiket ke DB Admin → Validator dapat Add
+```
+
+### Fase 2: Terima Pengembalian (TRIGGER SELESAI)
+```
+1. Setelah Alih Media BT & SU selesai, berkas dikembalikan ke Warkah
+2. Warkah Add lagi → terima pengembalian → catat status_pengembalian = 'dikembalikan'
+3. Klik "Selesai Fase 2" → TRIGGER: Tiket = SELESAI (100%)
+```
+
+> **PENTING:** Tanpa Fase 2, tiket TIDAK akan 100% meskipun Alih Media sudah selesai!
 
 ---
 
@@ -96,8 +121,19 @@ Contoh: `1 · K/41/251124/1 · - · — · 14/10/2024 · PTPGT · Berry · DISER
 
 ## 6. Revisi dari Warkah
 
-Jika data pendukung bermasalah, Warkah dapat mengembalikan tiket (ke DB Admin / Loket / Verifikator / Warkah) dengan catatan — kode pembetulan **P1, P2, P3, ...** (revisi internal Warkah).
+Jika data pendukung bermasalah, Warkah dapat mengembalikan tiket dengan catatan.
 
 ---
 
-*Dokumen ini bagian dari panduan alur LOKET 2026 — diselaraskan dengan `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` + konfigurasi alur paralel (Warkah ║ Verifikator; gate Validator via `diserahkan_ke_validator`).*
+## 7. Perbedaan dari Alur Paralel Lama
+
+| Aspek | Alur Paralel (Lama) | Alur 2 Fase (Baru v2.3) |
+|-------|---------------------|-------------------------|
+| Verif ↔ Warkah | Paralel | Sekuensial |
+| Jumlah Fase | 1 fase | 2 fase |
+| Trigger Selesai | Alih Media | Warkah Fase 2 + dikembalikan |
+| Gate Validator | Via flag saja | Warkah selesai + flag |
+
+---
+
+Dokumen ini bagian dari panduan alur LOKET 2026 - diselaraskan dengan kode sumber TiketFlowService.php v2.3 (2 fase, 17 September 2026).

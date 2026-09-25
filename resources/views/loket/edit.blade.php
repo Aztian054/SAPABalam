@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Tiket — Loket')
+@section('title', 'Edit Berkas — Loket')
 
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h4 class="fw-bold mb-1"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Data Tiket</h4>
+        <h4 class="fw-bold mb-1"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Data Berkas</h4>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb small mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('loket.index') }}">Loket</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('loket.show', $tiket->id) }}">Detail Tiket</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('loket.show', $tiket->id) }}">Detail Berkas</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Edit</li>
             </ol>
         </nav>
@@ -54,12 +54,6 @@
                     @error('no_hp_pemohon') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-6">
-                    <label for="satuan_kerja" class="form-label small fw-semibold">Satuan Kerja (Satker)</label>
-                    <input type="text" name="satuan_kerja" id="satuan_kerja" class="form-control @error('satuan_kerja') is-invalid @enderror"
-                           value="{{ old('satuan_kerja', $tiket->satuan_kerja) }}" maxlength="200">
-                    @error('satuan_kerja') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-6">
                     <label for="no_hak_sekarang" class="form-label small fw-semibold">No. Hak Sekarang</label>
                     <input type="text" name="no_hak_sekarang" id="no_hak_sekarang" class="form-control @error('no_hak_sekarang') is-invalid @enderror"
                            value="{{ old('no_hak_sekarang', $tiket->no_hak_sekarang) }}" maxlength="100">
@@ -80,7 +74,7 @@
             </div>
 
             <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-primary btn-sm rounded-3 px-4 shadow-sm">
+                <button type="submit" class="btn btn-gold btn-sm rounded-3 px-4 shadow-sm">
                     <i class="bi bi-check-lg me-1"></i> Simpan Perubahan
                 </button>
                 <a href="{{ route('loket.show', $tiket->id) }}" class="btn btn-outline-secondary btn-sm rounded-3 px-3">Batal</a>

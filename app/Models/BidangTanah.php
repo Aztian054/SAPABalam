@@ -14,7 +14,6 @@ class BidangTanah extends Model
         'no_sertifikat_elektronik',
         'jenis_hak',
         'nama_pemegang_hak',
-        'luas_m2',
         'desa_kelurahan',
         'kecamatan',
         'status_plotting',
@@ -22,7 +21,6 @@ class BidangTanah extends Model
     ];
 
     protected $casts = [
-        'luas_m2' => 'decimal:2',
         'urutan' => 'integer',
     ];
 

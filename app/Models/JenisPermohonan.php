@@ -11,14 +11,12 @@ class JenisPermohonan extends Model
         'kode',
         'nama',
         'kategori',
-        'batas_hari_sla',
         'deskripsi',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'batas_hari_sla' => 'integer',
     ];
 
     public function persyaratanDokumens(): HasMany

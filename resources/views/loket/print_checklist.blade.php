@@ -15,6 +15,11 @@
         table.data { width: 100%; border-collapse: collapse; margin: 12px 0; }
         table.data th, table.data td { border: 1px solid #333; padding: 5px 6px; text-align: left; font-size: 11px; vertical-align: top; }
         table.data th { background: #eef1f5; }
+        .col-no-b { width: 28px; }
+        table.data .col-sifat { width: 90px; }
+        table.data .col-ket { width: 120px; }
+        .judul-checklist { text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+        .empty-checklist { text-align: center; }
         .chk { text-align: center; width: 34px; }
         .chk span { display: inline-block; width: 12px; height: 12px; border: 1px solid #333; }
         .sign { margin-top: 60px; width: 100%; }
@@ -28,17 +33,13 @@
 <body>
     <button class="print-btn" onclick="window.print()">Cetak</button>
 
-    <div class="header">
-        <h2>KANTOR PERTANAHAN KOTA BANDAR LAMPUNG</h2>
-        <p>BADAN PERTANAHAN NASIONAL</p>
-        <p>Sistem Loket Pelayanan Pertanahan Elektronik BMN BALAM &mdash; Versi 2.0</p>
-    </div>
+    @include('partials.kop_surat')
 
     <div class="kode">
         <span class="box">KODE TIKET: {{ $tiket->kode_tiket }}</span>
     </div>
 
-    <div style="text-align:center; font-size:13px; font-weight:bold; margin-bottom:4px;">
+    <div class="judul-checklist">
         CHECKLIST KELENGKAPAN BERKAS PERMOHONAN PERTANAHAN
     </div>
 
@@ -48,16 +49,16 @@
         <tr><td>Jenis Permohonan</td><td>: {{ $tiket->jenisPermohonan?->nama ?? '-' }}</td>
             <td>Jumlah Bidang</td><td>: {{ $tiket->jumlah_bidang }}</td></tr>
         <tr><td>Tanggal Masuk</td><td>: {{ $tiket->tanggal_masuk?->format('d/m/Y') }}</td>
-            <td>Batas SLA</td><td>: {{ $tiket->jenisPermohonan?->batas_hari_sla ?? '-' }} hari</td></tr>
+            <td>Status</td><td>: {{ $tiket->status_label }}</td></tr>
     </table>
 
     <table class="data">
         <thead>
             <tr>
-                <th style="width:28px;">No</th>
+                <th class="col-no-b">No</th>
                 <th>Persyaratan Dokumen</th>
-                <th style="width:90px;">Sifat</th>
-                <th style="width:120px;">Keterangan</th>
+                <th class="col-sifat">Sifat</th>
+                <th class="col-ket">Keterangan</th>
                 <th class="chk">Lengkap</th>
             </tr>
         </thead>
@@ -72,7 +73,7 @@
                     <td class="chk"><span>&nbsp;</span></td>
                 </tr>
             @empty
-                <tr><td colspan="5" style="text-align:center;">Belum ada daftar persyaratan untuk jenis permohonan ini.</td></tr>
+                <tr><td colspan="5" class="empty-checklist">Belum ada daftar persyaratan untuk jenis permohonan ini.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -68,7 +68,6 @@ class CsrfProtectionTest extends TestCase
             'kode' => 'TPK',
             'nama' => 'Permohonan Tes Loket',
             'kategori' => 'umum',
-            'batas_hari_sla' => 7,
             'is_active' => true,
         ]);
 

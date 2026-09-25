@@ -102,6 +102,8 @@ Sistem menerima **username** maupun **email** saat login (`AuthController@login`
 - Contoh: username `admin` + password `admin123`, atau `loket1` + `loket123`.
 - Akun harus berstatus **aktif** (`is_active = true`).
 - Setelah login, akun diarahkan ke `dashboard` masing-masing role.
+- **Rate-limit:** `POST /login` memakai `throttle:6,1` — maksimal **6 percobaan login per menit**. Setelah 6× gagal dalam 1 menit, percobaan berikutnya ditolak sementara (HTTP 429 *Too Many Attempts*); tunggu 1 menit lalu coba lagi.
+- Akun non-aktif **tidak dapat login** meskipun username/password benar.
 
 ---
 

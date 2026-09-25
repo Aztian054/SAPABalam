@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Alih Media SU — Detail Tiket')
+@section('title', 'Alih Media SU — Detail Berkas')
 
 @section('content')
     <div class="d-flex align-items-center gap-2 mb-3">
-        <h4 class="fw-bold text-dark mb-0">Detail Tiket {{ $tiket->kode_tiket }}</h4>
+        <h4 class="fw-bold text-dark mb-0">Detail Berkas {{ $tiket->kode_tiket }}</h4>
     </div>
 
     @include('partials.tiket_header')
@@ -50,17 +50,17 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Catatan</label>
-                            <textarea name="catatan" rows="3" class="form-control">{{ $lembar->catatan ?? '' }}</textarea>
+                            <textarea name="catatan" id="catatan" rows="3" class="form-control">{{ $lembar->catatan ?? '' }}</textarea>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan Progres Alih Media SU</button>
+                        <button class="btn btn-gold"><i class="bi bi-save me-1"></i>Simpan Progres Alih Media SU</button>
                     </div>
                 </form>
             </div>
         </div>
     @elseif($isActive && !$mine)
-        <div class="alert alert-warning"><i class="bi bi-person-lock me-1"></i>Tiket ini sedang diproses akun lain pada tahap Alih Media SU.</div>
+        <div class="alert alert-warning"><i class="bi bi-person-lock me-1"></i>Berkas ini sedang diproses akun lain pada tahap Alih Media SU.</div>
     @endif
 
     @include('partials.timeline')

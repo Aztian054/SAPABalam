@@ -9,7 +9,7 @@
 
     <div class="alert alert-warning border-0 shadow-sm small">
         <i class="bi bi-exclamation-triangle-fill me-1"></i>
-        Berikut tiket berstatus <b>Dikembalikan</b> yang menunggu perbaikan. Revisi dapat dikirim balik lintas tahap
+        Berikut berkas berstatus <b>Dikembalikan</b> yang menunggu perbaikan. Revisi dapat dikirim balik lintas tahap
         (Loket → Verifikator → Warkah → Validator → Alih Media) dan <b>tidak dibatasi</b> jumlah iterasi pembetulan.
     </div>
 
@@ -20,7 +20,7 @@
                     <input type="text" name="q" class="form-control" placeholder="Cari kode tiket / pemohon..." value="{{ request('q') }}">
                 </div>
                 <div class="col-auto">
-                    <button class="btn btn-primary"><i class="bi bi-search me-1"></i>Cari</button>
+                    <button class="btn btn-gold"><i class="bi bi-search me-1"></i>Cari</button>
                 </div>
             </form>
         </div>
@@ -44,8 +44,8 @@
                             <td><small class="text-muted">{{ Str::limit($cr?->isi_revisi ?? '-', 100) }}</small></td>
                             <td><small>{{ optional($cr?->tanggal_masuk)->format('d/m/Y H:i') }}</small></td>
                             <td class="text-end">
-                                <a href="{{ route('admin.show', $t->id) }}" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></a>
-                                <form action="{{ route('admin.revisi.hapus', $t->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus revisi ini dan kembalikan tiket ke Database Admin?')">
+                                <a href="{{ route('admin.show', $t->id) }}" class="btn btn-sm btn-gold"><i class="bi bi-eye"></i></a>
+                                <form action="{{ route('admin.revisi.hapus', $t->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus revisi ini dan kembalikan berkas ke Database Admin?')">
                                     @csrf
                                     <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i></button>
                                 </form>

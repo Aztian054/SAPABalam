@@ -27,17 +27,6 @@ class PemimpinController extends Controller
             'batal' => Tiket::where('status', 'batal')->count(),
         ];
 
-        // SLA performance
-        $selesaiTotal = Tiket::where('status', 'selesai')->count();
-        $tepatWaktu = Tiket::where('status', 'selesai')
-            ->whereNotNull('tanggal_target_selesai')
-            ->whereColumn('tanggal_selesai', '<=', 'tanggal_target_selesai')
-            ->count();
-        $overdue = Tiket::whereNotIn('status', ['selesai', 'batal'])
-            ->whereNotNull('tanggal_target_selesai')
-            ->whereDate('tanggal_target_selesai', '<', today())
-            ->count();
-
         // Beban kerja per petugas (penugasan aktif per tahap)
         $beban = User::whereIn('role', array_keys(TiketFlowService::ROLE_STAGE))
             ->get()
@@ -66,9 +55,10 @@ class PemimpinController extends Controller
         $tikets = $q->take(30)->get();
 
         $activities = RiwayatStatus::with(['tiket', 'user'])->latest()->take(10)->get();
+        $selesaiTotal = $stageCounts['selesai'];
 
         return view('pemimpin.index', compact(
-            'stageCounts', 'selesaiTotal', 'tepatWaktu', 'overdue', 'beban', 'tikets', 'activities'
+            'stageCounts', 'selesaiTotal', 'beban', 'tikets', 'activities'
         ));
     }
 

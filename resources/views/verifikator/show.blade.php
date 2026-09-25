@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Verifikator — Detail Tiket')
+@section('title', 'Verifikator — Detail Berkas')
 
 @section('content')
     <div class="d-flex align-items-center gap-2 mb-3">
-        <h4 class="fw-bold text-dark mb-0">Detail Tiket {{ $tiket->kode_tiket }}</h4>
+        <h4 class="fw-bold text-dark mb-0">Detail Berkas {{ $tiket->kode_tiket }}</h4>
     </div>
 
     @include('partials.tiket_header')
@@ -41,11 +41,11 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Catatan / Saran Koreksi</label>
-                            <textarea name="catatan" rows="4" class="form-control" placeholder="Tulis catatan pemeriksaan...">{{ $verifikasi->catatan ?? '' }}</textarea>
+                            <textarea name="catatan" id="catatan" rows="4" class="form-control" placeholder="Tulis catatan pemeriksaan...">{{ $verifikasi->catatan ?? '' }}</textarea>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan Hasil Pemeriksaan</button>
+                        <button class="btn btn-gold"><i class="bi bi-save me-1"></i>Simpan Hasil Pemeriksaan</button>
                     </div>
                 </form>
             </div>
@@ -53,7 +53,7 @@
     @elseif($isActive && !$mine)
         <div class="alert alert-warning">
             <i class="bi bi-person-lock me-1"></i>
-            Tiket ini sedang diproses oleh akun lain pada tahap Verifikator.
+            Berkas ini sedang diproses oleh akun lain pada tahap Verifikator.
         </div>
     @endif
 

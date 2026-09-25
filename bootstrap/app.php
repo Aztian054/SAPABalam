@@ -15,6 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Aktifkan mode stateful Sanctum: SPA React (cookie session) mengakses
+        // route /api/v1 dan divalidasi lewat session, bukan bearer token.
+        $middleware->statefulApi();
+
+        // Akses via ngrok/tunnel https: percayai header proxy (X-Forwarded-Proto dll.)
+        // agar Laravel membangkitkan URL https untuk form & redirect (mistmatch
+        // http/https saat login melalui tunnel). Skope ketat untuk production.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);

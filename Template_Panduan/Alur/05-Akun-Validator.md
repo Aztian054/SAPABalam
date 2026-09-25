@@ -13,9 +13,22 @@ Validator bertugas memvalidasi kesesuaian data sebelum proses alih media. **Pemi
 | **Pra-BTel** | `validator_btel` | Kesesuaian data Buku Tanah (BT): **nomor, nama, luas** |
 | **Pra-SuEl** | `validator_suel` | Kesesuaian data Surat Ukur (SU): **gambar ukur, luas, batas** |
 
-> **Urutan bebas:** Validator Pra-BTel dan Pra-SuEl dapat dikerjakan **paralel/bebas urutan** — keduanya **mulai** saat Warkah menandai `diserahkan_ke_validator = true`, **tanpa menunggu Verifikator**. Untuk lanjut ke Alih Media, **kedua bidang harus selesai** (plus semua tahap lain selesai).
+> **Urutan bebas:** Validator Pra-BTel dan Pra-SuEl dapat dikerjakan **paralel/bebas urutan** — keduanya **mulai** saat Warkah menandai `diserahkan_ke_validator = true`. **Tidak menunggu Verifikator** (perubahan dari alur lama).
 >
-> Jabatan Validator boleh dipakai **banyak akun** (mis. beberapa petugas Validator BT dan beberapa petugas Validator SU); tiap akun hanya mengerjakan tiket di daftarnya sendiri (Exclusive Claim per jabatan).
+> Jabatan Validator boleh dipakai **banyak akun**; tiap akun hanya mengerjakan tiket di daftarnya sendiri (Exclusive Claim per jabatan).
+
+---
+
+## 4. Gate/Aturan di Kode (TiketFlowService.php)
+
+```php
+'validasi_btel' => ['warkah'],   // TIDAK tunggu Verifikasi - hanya Warkah
+'validasi_suel' => ['warkah'],   // TIDAK tunggu Verifikasi - hanya Warkah
+```
+
+**Artinya:**
+- Validator dapat Add tiket **hanya** jika Warkah selesai + flag `diserahkan_ke_validator = true`
+- **Tidak menunggu Verifikasi** — ini perbedaan utama dari alur sebelumnya
 
 ```
 WARKAH (diserahkan_ke_validator = true)
@@ -98,4 +111,4 @@ Jika belum → tiket tetap di DB Admin, tombol aksi Alih Media TERKUNCI.
 
 ---
 
-*Dokumen ini bagian dari panduan alur LOKET 2026 — diselaraskan dengan `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` + konfigurasi alur paralel (gate Validator via `diserahkan_ke_validator`; gate Alih Media AND penuh).*
+Dokumen ini bagian dari panduan alur LOKET 2026 - diselaraskan dengan kode sumber TiketFlowService.php v2.3 (17 September 2026).

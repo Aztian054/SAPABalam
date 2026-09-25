@@ -1,6 +1,7 @@
-# Checklist Kepatuhan PRD — LOKET 2026 (v2.2)
+# Checklist Kepatuhan PRD — LOKET 2026 (v2.3)
 
-> **Dokumen kerja Fase 1 (Audit Kepatuhan PRD).** Status diverifikasi terhadap kode sumber pada **14 September 2026**.
+> **Dokumen kerja Fase 1 (Audit Kepatuhan PRD).** Status diverifikasi terhadap kode sumber pada **15 September 2026**
+> (pembaruan: audit tambahan fitur website riil + koreksi Admin tanpa edit/hapus tiket).
 > Acuan: `PRD_LOKET_BMN_BALAM.md` §12 (Kriteria Keberhasilan) dan §5.5 (Aturan & Ketentuan Alur Krusial).
 > Legenda: ✅ Terpenuhi · ⚠️ Sebagian/perlu perbaikan · ❌ Belum ada.
 
@@ -42,11 +43,26 @@
 | 13 | Detail tiket — nama penanggung jawab hanya di akun penanggung jawabnya | ⚠️ | Perlu audit per view (privasi detail) |
 | 14 | Kode revisi P1..Pn tak terbatas | ✅ | String, increment per resubmit |
 
+## B2. Fitur Website Riil (Audit Tambahan — 15 Sep 2026)
+
+| # | Fitur | Status | Catatan / Bukti |
+|---|---|---|---|
+| 1 | Login username ATAU email + akun aktif | ✅ | `AuthController@login` (deteksi field email/username; `is_active => true`) |
+| 2 | Rate-limit login 6×/menit | ✅ | Middleware `throttle:6,1` pada `POST /login` |
+| 3 | Dashboard: grafik tiket 6 bulan + statistik + overdue per stage | ✅ | `DashboardController@index` (`$monthlyData` 6 bulan, `$overdueByStage`) |
+| 4 | Laporan & Rekap SLA di semua 9 role (`index/print/export/print-rapi`) | ✅ | `routes/web.php` — grup `reports.*` terbuka untuk 9 role |
+| 5 | Admin TANPA edit/hapus tiket (sesuai route `admin.*`) | ✅ | Hanya index/show/create/arsipkan (+massal)/revisi(hapus)/users(toggle) |
+| 6 | Arsip massal tiket selesai | ✅ | `POST /admin/selesai/arsipkan-massal` |
+| 7 | Toggle aktif/nonaktif akun (real-time) | ✅ | `POST /admin/users/{id}/toggle` |
+| 8 | Tracking publik by nomor tiket ATAU nomor telepon | ✅ | `TrackingController@index` query `q` (like `kode_tiket`, fallback like `nomor_telepon`) |
+| 9 | Seeder 2 akun per jabatan (17 akun) | ✅ | `database/seeders/UserSeeder.php` |
+| 10 | React SPA `/app/{any?}` | ✅ | Route fallback `SpaController` |
+
 ## C. Ringkasan Status
 
 | Status | Jumlah | Butir |
 |---|---|---|
-| ✅ Terpenuhi | 19 | A1–A8, A10, A11, B1–B8, B10, B11, B14 |
+| ✅ Terpenuhi | 29 | A1–A8, A10, A11, B1–B8, B10, B11, B14, B2-1 – B2-10 |
 | ⚠️ Sebagian/perlu audit | 5 | A9, A12, B9, B12, B13 |
 | ❌ Belum ada | 0 | — |
 
@@ -59,4 +75,4 @@
 
 ---
 
-*Disusun 14 September 2026 — diverifikasi dari kode sumber; detail teknis di `Template_Panduan/LAPORAN_DEMO_ALUR_KONDISI_REALTIME.md`.*
+*Disusun 14 September 2026, diperbarui 15 September 2026 — diverifikasi dari kode sumber; detail teknis di `Template_Panduan/LAPORAN_DEMO_ALUR_KONDISI_REALTIME.md`.*

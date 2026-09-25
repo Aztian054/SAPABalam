@@ -58,7 +58,6 @@ class DemoAlurRealtimeTest extends TestCase
             'kode' => $kode,
             'nama' => 'Permohonan Demo Alur Realtime',
             'kategori' => 'umum',
-            'batas_hari_sla' => 7,
             'is_active' => true,
         ]);
     }
@@ -74,7 +73,6 @@ class DemoAlurRealtimeTest extends TestCase
             'nama_pemohon' => $pemohon,
             'nik_pemohon' => '18710'.now()->format('ymdHis'),
             'no_hp_pemohon' => '08130000'.now()->format('His'),
-            'satuan_kerja' => $kode === 'DEMO/G4/T4' ? 'Kementerian PUPR / Demo' : null,
             'no_hak_sekarang' => 'M.1088/NEGERI OLOK',
             'kelurahan_desa' => 'Way Laga',
             'kecamatan' => 'Panjang',
@@ -85,7 +83,6 @@ class DemoAlurRealtimeTest extends TestCase
                 'no_sertifikat_lama' => 'SHM No. DEMO-'.$this->hashKode($kode),
                 'jenis_hak' => 'HM',
                 'nama_pemegang_hak' => $pemohon,
-                'luas_m2' => 1250,
                 'desa_kelurahan' => 'Way Laga',
                 'kecamatan' => 'Panjang',
             ]],
@@ -121,24 +118,51 @@ class DemoAlurRealtimeTest extends TestCase
         $tiket->refresh();
     }
 
-    private function dataSimpanWarkah(?string $statusSertipikat = 'diserahkan'): array
+    private function dataSimpanWarkah(): array
     {
         return [
-            'status_berkas_dataset' => 'selesai',
             'status_data_sertipikat_bt' => 'selesai',
             'status_data_sertipikat_su' => 'selesai',
             'status_sosialisasi' => 'selesai',
-            'status_public_response' => 'selesai',
-            'status_sertipikat' => $statusSertipikat,
             'status_dokumen_bt' => 'ada',
             'status_dokumen_su' => 'ada',
-            'tanggal_diserahkan' => now()->toDateString(),
             'jumlah_berkas' => 3,
             'jumlah_halaman' => 12,
             'gabungan' => 0,
-            'jumlah_berkas_dikembalikan' => 0,
             'keterangan_status' => 'Data warkah lengkap dan siap.',
         ];
+    }
+
+    /** KIRIM berkas BT/SU ke Validator (gerbang paralel) melalui HTTP route warkah.kirim. */
+    private function kirimBerkas(User $warkah, Tiket $tiket): void
+    {
+        $validator = User::whereIn('role', ['validator_btel', 'validator_suel'])
+            ->where('is_active', true)
+            ->first() ?? $this->user('validator_btel');
+
+        $this->actingAs($warkah);
+        $this->post(route('warkah.kirim', $tiket->id), [
+            'penerima_validator_id' => $validator->id,
+            'waktu_serah' => now()->format('Y-m-d\TH:i'),
+            'status_berkas_bt' => 'lengkap',
+            'status_berkas_su' => 'lengkap',
+            'catatan_kondisi_berkas' => 'Berkas BT/SU diserahkan lengkap untuk demo alur.',
+        ])->assertSessionHasNoErrors();
+        $tiket->refresh();
+    }
+
+    /** Konfirmasi Pengembalian Berkas BT/SU ke Warkah melalui HTTP route warkah.pengembalian. */
+    private function catatPengembalian(User $warkah, Tiket $tiket): void
+    {
+        $this->actingAs($warkah);
+        $this->post(route('warkah.pengembalian', $tiket->id), [
+            'petugas_pengembali' => 'Petugas Warkah '.$warkah->name,
+            'waktu_kembali' => now()->format('Y-m-d\TH:i'),
+            'kondisi_berkas_kembali' => 'lengkap',
+            'catatan_pengembalian' => 'Berkas BT/SU diterima kembali oleh Warkah.',
+            'jumlah_berkas_dikembalikan' => 3,
+        ])->assertSessionHasNoErrors();
+        $tiket->refresh();
     }
 
     /** Satu gelombang happy-path penuh: Loket → 6 tahap → SELESAI. */
@@ -150,10 +174,10 @@ class DemoAlurRealtimeTest extends TestCase
         $this->addTiket($verif, $tiket, 'verifikasi');
         $this->addTiket($warkah, $tiket, 'warkah');
 
-        // Warkah menyiapkan data BT & SU + membuka Validator (diserahkan).
+        // Warkah menyiapkan data lalu KIRIM berkas BT/SU (DIPINJAM) → buka Validator.
         $this->simpanTahap($warkah, $tiket, 'warkah', $this->dataSimpanWarkah());
+        $this->kirimBerkas($warkah, $tiket);
         $this->assertTrue($tiket->fresh()->isDiserahkanKeValidator());
-        $this->selesaiTahap($warkah, $tiket, 'warkah', "Selesai warkah {$no}: data BT & SU diserahkan ke Validator.");
 
         // Verifikator menyelesaikan pemeriksaan.
         $this->simpanTahap($verif, $tiket, 'verifikasi', ['status_verifikasi' => 'lengkap', 'catatan' => 'Berkas verifikasi lengkap dan sah.']);
@@ -167,14 +191,20 @@ class DemoAlurRealtimeTest extends TestCase
         $this->simpanTahap($vsuel, $tiket, 'validasi_suel', ['status_validasi' => 'lulus', 'catatan' => 'Validasi SU sesuai.']);
         $this->selesaiTahap($vsuel, $tiket, 'validasi_suel', "Selesai validator SU {$no}.");
 
-        // Gate AND penuh — Alih Media baru terbuka setelah semua tahap selesai.
-        $this->assertTrue($tiket->fresh()->isSemuaTahapSelesai());
+        // Gate parallel: Warkah cukup KIRIM (belum harus selesai) — Alih Media dapat mulai.
         $this->addTiket($ambt, $tiket, 'alih_media_btel');
         $this->addTiket($amsu, $tiket, 'alih_media_suel');
         $this->simpanTahap($ambt, $tiket, 'alih_media_btel', ['status_scan_buku_tanah' => 'sudah', 'status_upload_kkp' => 'sudah', 'status_ttd_elektronik' => 'sudah', 'tanggal_terbit_sertifikat_el' => now()->toDateString()]);
         $this->selesaiTahap($ambt, $tiket, 'alih_media_btel', "Selesai alih media BT {$no}: sertifikat BT elektronik terbit.");
         $this->simpanTahap($amsu, $tiket, 'alih_media_suel', ['status_scan_surat_ukur' => 'sudah', 'status_upload_kkp' => 'sudah', 'status_ttd_elektronik' => 'sudah', 'tanggal_terbit_sertifikat_el' => now()->toDateString()]);
         $this->selesaiTahap($amsu, $tiket, 'alih_media_suel', "Selesai alih media SU {$no}: sertifikat SU elektronik terbit.");
+
+        // BELUM selesai — menunggu Warkah mencatat pengembalian hardcopy.
+        $this->assertNotSame('selesai', $tiket->fresh()->status);
+
+        // Warkah mencatat pengembalian lalu Proses Selesai → SELESAI.
+        $this->catatPengembalian($warkah, $tiket);
+        $this->selesaiTahap($warkah, $tiket, 'warkah', "Selesai warkah {$no}: berkas BT/SU telah dikembalikan ke Warkah.");
 
         $this->assertSame('selesai', $tiket->fresh()->status);
         $this->assertTrue($tiket->fresh()->isAlihMediaSelesai());
@@ -202,8 +232,8 @@ class DemoAlurRealtimeTest extends TestCase
         $this->assertSame(6, $tiket->penugasans()->where('status', 'selesai')->count());
         $this->assertSame('P0', $tiket->status_pembetulan);
         $this->assertSame(0, $tiket->revisi_ke);
-        // Timeline riwayat lengkap: 1 registrasi + 6 Add + 6 Selesai + 1 serah Warkah→Validator.
-        $this->assertDatabaseCount('riwayat_statuses', 14);
+        // Timeline riwayat lengkap: 1 registrasi + 6 Add + 6 Selesai + 1 serah Warkah→Validator + 1 pengembalian.
+        $this->assertDatabaseCount('riwayat_statuses', 15);
     }
 
     // ------------------------------------------------------------------
@@ -294,7 +324,7 @@ class DemoAlurRealtimeTest extends TestCase
 
         $this->addTiket($warkah1, $tiket, 'warkah');
         $this->simpanTahap($warkah1, $tiket, 'warkah', $this->dataSimpanWarkah());
-        $this->selesaiTahap($warkah1, $tiket, 'warkah', 'Selesai warkah 1 (data diserahkan).');
+        $this->kirimBerkas($warkah1, $tiket);
 
         $this->addTiket($vbtel1, $tiket, 'validasi_btel');
         $this->addTiket($vsuel1, $tiket, 'validasi_suel');
@@ -309,6 +339,10 @@ class DemoAlurRealtimeTest extends TestCase
         $this->selesaiTahap($ambt1, $tiket, 'alih_media_btel', 'Selesai alih media BT 1.');
         $this->simpanTahap($amsu1, $tiket, 'alih_media_suel', ['status_scan_surat_ukur' => 'sudah', 'status_upload_kkp' => 'sudah', 'status_ttd_elektronik' => 'sudah']);
         $this->selesaiTahap($amsu1, $tiket, 'alih_media_suel', 'Selesai alih media SU 1.');
+
+        // Warkah mencatat pengembalian berkas lalu Proses Selesai → tiket SELESAI.
+        $this->catatPengembalian($warkah1, $tiket);
+        $this->selesaiTahap($warkah1, $tiket, 'warkah', 'Selesai warkah 1 (berkas BT/SU sudah kembali).');
 
         $this->assertSame('selesai', $tiket->fresh()->status);
         $this->assertSame(1, $tiket->fresh()->revisi_ke);
@@ -335,31 +369,31 @@ class DemoAlurRealtimeTest extends TestCase
         // ERROR (a): Validator claim prematur — sebelum Warkah menandai diserahkan.
         $this->actingAs($vbtel2);
         $this->post(route('validator_btel.add', $tiket->id))
-            ->assertSessionHas('error', 'Tiket DEMO/G4/T4 belum diserahkan oleh Warkah ke Validator (diserahkan_ke_validator belum aktif); belum dapat diproses di tahap validasi_btel.');
+            ->assertSessionHas('error', 'Berkas DEMO/G4/T4 belum diserahkan oleh Warkah ke Validator (diserahkan_ke_validator belum aktif); belum dapat diproses di tahap validasi_btel.');
 
-        // ERROR (b): Gate Alih Media terkunci — belum semua tahap selesai
-        // (persyaratan pertama yang gagal: Verifikasi belum selesai).
+        // ERROR (b): Gate Alih Media terkunci — berkas belum diserahkan Warkah
+        // (persyaratan pertama yang gagal: diserahkan_ke_validator belum aktif).
         $this->actingAs($ambt1);
         $this->post(route('alih_media_btel.add', $tiket->id))
-            ->assertSessionHas('error', 'Tiket DEMO/G4/T4 belum selesai pada tahap verifikasi; belum dapat diproses di tahap alih_media_btel.')
+            ->assertSessionHas('error', 'Berkas DEMO/G4/T4 belum diserahkan berkas BT/SU-nya oleh Warkah; belum dapat diproses di tahap alih_media_btel.')
             ->assertSessionMissing('success');
 
         // ERROR (c): Anti-duplikat — verifikator1 sudah Add, verifikator2 diblokir.
         $this->addTiket($verif1, $tiket, 'verifikasi');
         $this->actingAs($verif2);
         $this->post(route('verifikator.add', $tiket->id))
-            ->assertSessionHas('error', 'Tiket DEMO/G4/T4 sedang diproses akun lain pada tahap ini.');
+            ->assertSessionHas('error', 'Berkas DEMO/G4/T4 sedang diproses akun lain pada tahap ini.');
 
-        // Lanjut: verifikasi selesai, warkah selesai + diserahkan.
+        // Lanjut: verifikasi selesai, warkah simpan + KIRIM berkas (gerbang Validator terbuka).
         $this->simpanTahap($verif1, $tiket, 'verifikasi', ['status_verifikasi' => 'lengkap']);
         $this->selesaiTahap($verif1, $tiket, 'verifikasi', 'Selesai verifikator 1.');
         $this->addTiket($warkah1, $tiket, 'warkah');
         $this->simpanTahap($warkah1, $tiket, 'warkah', $this->dataSimpanWarkah());
-        $this->selesaiTahap($warkah1, $tiket, 'warkah', 'Selesai warkah 1.');
+        $this->kirimBerkas($warkah1, $tiket);
 
         // Revisi INTERNAL: Validator BT mengembalikan ke Warkah.
         $this->addTiket($vbtel1, $tiket, 'validasi_btel');
-        $this->simpanTahap($vbtel1, $tiket, 'validasi_btel', ['status_validasi' => 'perlu_koreksi', 'catatan' => 'Nomor sertipikat tidak cocok warkah.']);
+        $this->simpanTahap($vbtel1, $tiket, 'validasi_btel', ['status_validasi' => 'ditolak', 'catatan' => 'Nomor sertipikat tidak cocok warkah.']);
         $this->actingAs($vbtel1);
         $this->post(route('validator_btel.revisi', $tiket->id), [
             'isi_revisi' => 'Nomor sertipikat pada validasi BT tidak sesuai data warkah; perbaiki data warkah.',
@@ -374,17 +408,16 @@ class DemoAlurRealtimeTest extends TestCase
         $this->actingAs($warkah1);
         $this->get(route('warkah.index'))->assertSee('Revisi Menunggu Saya')->assertSee('DEMO/G4/T4');
 
-        // Warkah meng-Add ulang (dibuka oleh pending revisi), memperbaiki, selesai.
+        // Warkah meng-Add ulang (dibuka oleh pending revisi), memperbaiki data warkah.
         $this->addTiket($warkah1, $tiket, 'warkah');
         $this->simpanTahap($warkah1, $tiket, 'warkah', $this->dataSimpanWarkah());
-        $this->selesaiTahap($warkah1, $tiket, 'warkah', 'Data warkah diperbaiki setelah revisi internal.');
 
         // Validator BT meng-Add ulang setelah revisi internal, lulus.
         $this->addTiket($vbtel1, $tiket, 'validasi_btel');
         $this->simpanTahap($vbtel1, $tiket, 'validasi_btel', ['status_validasi' => 'lulus']);
         $this->selesaiTahap($vbtel1, $tiket, 'validasi_btel', 'Selesai validator BT 1 (setelah revisi).');
 
-        // Validator SU, Alih Media BT & SU → SELESAI total.
+        // Validator SU, Alih Media BT & SU.
         $this->addTiket($vsuel1, $tiket, 'validasi_suel');
         $this->simpanTahap($vsuel1, $tiket, 'validasi_suel', ['status_validasi' => 'lulus']);
         $this->selesaiTahap($vsuel1, $tiket, 'validasi_suel', 'Selesai validator SU 1.');
@@ -395,6 +428,10 @@ class DemoAlurRealtimeTest extends TestCase
         $this->selesaiTahap($ambt1, $tiket, 'alih_media_btel', 'Selesai alih media BT 1.');
         $this->simpanTahap($amsu1, $tiket, 'alih_media_suel', ['status_scan_surat_ukur' => 'sudah', 'status_upload_kkp' => 'sudah', 'status_ttd_elektronik' => 'sudah']);
         $this->selesaiTahap($amsu1, $tiket, 'alih_media_suel', 'Selesai alih media SU 1.');
+
+        // Warkah mencatat pengembalian lalu Proses Selesai → SELESAI total.
+        $this->catatPengembalian($warkah1, $tiket);
+        $this->selesaiTahap($warkah1, $tiket, 'warkah', 'Data warkah diperbaiki setelah revisi internal + berkas BT/SU dikembalikan.');
 
         $this->assertSame('selesai', $tiket->fresh()->status);
         $this->assertSame(1, $tiket->fresh()->revisi_ke);
@@ -437,6 +474,7 @@ class DemoAlurRealtimeTest extends TestCase
         $this->simpanTahap($warkah1, $t6, 'warkah', $this->dataSimpanWarkah() + [
             'catatan' => 'CATATAN_RAHASIA_WARKAH_12345',
         ]);
+        $this->kirimBerkas($warkah1, $t6);
 
         $this->actingAs($warkah1);
         $this->get(route('warkah.show', $t6->id))->assertSee('CATATAN_RAHASIA_WARKAH_12345');
@@ -447,7 +485,7 @@ class DemoAlurRealtimeTest extends TestCase
         // Timeline bersifat GLOBAL — terlihat di akun tahap lain.
         $this->actingAs($verif1);
         $this->get(route('verifikator.show', $t6->id))
-            ->assertSee('Warkah menyerahkan sertipikat ke Validator');
+            ->assertSee('Warkah menyerahkan berkas BT/SU ke Validator');
 
         // Catatan final (tiket_penugasan.catatan) hanya ditampilkan di Detail Admin.
         $this->selesaiTahap($verif1, $t6, 'verifikasi', 'CATATAN_FINAL_VERIFIKATOR_999');
@@ -455,8 +493,6 @@ class DemoAlurRealtimeTest extends TestCase
         $this->get(route('admin.show', $t6->id))->assertSee('CATATAN_FINAL_VERIFIKATOR_999');
 
         // Selesaikan T6 penuh agar tracking dapat menampilkan status selesai + timeline.
-        $this->simpanTahap($warkah1, $t6, 'warkah', $this->dataSimpanWarkah());
-        $this->selesaiTahap($warkah1, $t6, 'warkah', 'Selesai warkah 1.');
         $this->addTiket($vbtel1, $t6, 'validasi_btel');
         $this->addTiket($vsuel1, $t6, 'validasi_suel');
         $this->simpanTahap($vbtel1, $t6, 'validasi_btel', ['status_validasi' => 'lulus']);
@@ -470,6 +506,10 @@ class DemoAlurRealtimeTest extends TestCase
         $this->simpanTahap($amsu1, $t6, 'alih_media_suel', ['status_scan_surat_ukur' => 'sudah', 'status_upload_kkp' => 'sudah', 'status_ttd_elektronik' => 'sudah']);
         $this->selesaiTahap($amsu1, $t6, 'alih_media_suel', 'Selesai alih media SU 1.');
 
+        // Warkah mencatat pengembalian lalu Proses Selesai → T6 SELESAI.
+        $this->catatPengembalian($warkah1, $t6);
+        $this->selesaiTahap($warkah1, $t6, 'warkah', 'Selesai warkah 1.');
+
         $this->assertSame('selesai', $t6->fresh()->status);
 
         // Tracking publik (tanpa login) menampilkan status, timeline, dan riwayat.
@@ -477,7 +517,7 @@ class DemoAlurRealtimeTest extends TestCase
             ->assertSee('DEMO/V6/T6')
             ->assertSee('Selesai (Sertifikat El. Terbit)')
             ->assertSee('Berkas terdaftar di Loket')
-            ->assertSee('Warkah menyerahkan sertipikat ke Validator');
+            ->assertSee('Warkah menyerahkan berkas BT/SU ke Validator');
 
         // Catatan revisi model terisi → dasar tabele menu Admin Revisi & alert Loket.
         $this->assertDatabaseHas('tiket_penugasan', [

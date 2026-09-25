@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracking Status Berkas — Loket Pertanahan Kantah Balam</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('asset/images/logobpn2026.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -52,6 +53,10 @@
             margin-bottom: 0.5rem;
             font-weight: bold;
         }
+        .logo-sm { width: 56px; height: 56px; }
+        .max-w-600 { max-width: 600px; }
+        .max-w-900 { max-width: 900px; }
+        .td-label { width: 120px; }
     </style>
 </head>
 <body>
@@ -59,12 +64,12 @@
     <!-- Hero Header -->
     <div class="hero-banner">
         <div class="container">
-            <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
-                <i class="bi bi-building-fill-check fs-2 text-warning"></i>
+            <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+                <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo BPN" class="rounded-circle bg-white object-fit-contain p-1 shadow logo-sm">
                 <h5 class="mb-0 fw-bold tracking-wide">Kantor Pertanahan Kota Bandar Lampung</h5>
             </div>
             <h2 class="fw-bold mb-2">Pelacakan Status Berkas Pertanahan</h2>
-            <p class="text-white-50 mx-auto" style="max-width: 600px;">
+            <p class="text-white-50 mx-auto max-w-600">
                 Pantau proses penyelesaian permohonan sertifikat dan berkas pertanahan Anda secara transparan dan real-time.
             </p>
             <div class="mt-3">
@@ -76,7 +81,7 @@
     </div>
 
     <!-- Main Container -->
-    <div class="container py-4" style="max-width: 900px;">
+    <div class="container py-4 max-w-900">
         <!-- Search Card -->
         <div class="card search-box-card p-4 mb-4">
             <form action="{{ route('tracking.index') }}" method="GET">
@@ -181,40 +186,32 @@
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-3 h-100">
                             <h6 class="fw-bold text-dark mb-2"><i class="bi bi-person-fill text-primary"></i> Data Pemohon</h6>
+                            <div class="table-responsive">
                             <table class="table table-sm table-borderless small mb-0">
                                 <tr>
-                                    <td class="text-muted" style="width: 120px;">Nama Pemohon</td>
+                                    <td class="text-muted td-label">Nama Pemohon</td>
                                     <td class="fw-bold">: {{ $tiket->nama_pemohon }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Instansi / Satker</td>
-                                    <td>: {{ $tiket->satuan_kerja ?? 'Perorangan' }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Tgl. Masuk</td>
                                     <td>: {{ $tiket->tanggal_masuk->format('d F Y') }}</td>
                                 </tr>
                             </table>
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-3 h-100">
                             <h6 class="fw-bold text-dark mb-2"><i class="bi bi-briefcase-fill text-warning"></i> Layanan Pertanahan</h6>
+                            <div class="table-responsive">
                             <table class="table table-sm table-borderless small mb-0">
                                 <tr>
-                                    <td class="text-muted" style="width: 120px;">Jenis Layanan</td>
+                                    <td class="text-muted td-label">Jenis Layanan</td>
                                     <td class="fw-bold">: {{ $tiket->jenisPermohonan->nama }}</td>
                                 </tr>
-                                <tr>
-                                    <td class="text-muted">Target SLA</td>
-                                    <td>: {{ $tiket->tanggal_target_selesai?->format('d F Y') ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Status SPS</td>
-                                    <td>: {!! $tiket->status_sps ? '<span class="text-success fw-bold">Sudah Bayar SPS</span>' : '<span class="text-muted">Belum SPS</span>' !!}</td>
-                                </tr>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BidangTanah;
+use App\Models\JenisHak;
 use App\Models\JenisPermohonan;
 use App\Models\RiwayatStatus;
 use App\Models\Tiket;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class LoketController extends Controller
 {
@@ -41,14 +43,18 @@ class LoketController extends Controller
             ->with('catatanRevisis')
             ->get();
 
-        return view('loket.index', compact('tikets', 'revisiBelumDiproses'));
+        $jenisPermohonans = JenisPermohonan::where('is_active', true)->with('persyaratanDokumens')->get();
+        $jenisHaks = JenisHak::where('is_active', true)->orderBy('urutan')->orderBy('kode')->get();
+
+        return view('loket.index', compact('tikets', 'revisiBelumDiproses', 'jenisPermohonans', 'jenisHaks'));
     }
 
+    /**
+     * Deprecated (V2.1): pembuatan tiket dipindah ke modal di halaman index.
+     */
     public function create()
     {
-        $jenisPermohonans = JenisPermohonan::where('is_active', true)->with('persyaratanDokumens')->get();
-
-        return view('loket.create', compact('jenisPermohonans'));
+        return redirect()->route('loket.index');
     }
 
     public function store(Request $request)
@@ -60,7 +66,6 @@ class LoketController extends Controller
             'nama_pemohon' => 'required|string|max:200',
             'nik_pemohon' => 'nullable|string|max:20',
             'no_hp_pemohon' => 'required|string|max:20',
-            'satuan_kerja' => 'nullable|string|max:200',
             'no_hak_sekarang' => 'nullable|string|max:100',
             'no_hak_sebelumnya' => 'nullable|string',
             'kelurahan_desa' => 'nullable|string|max:100',
@@ -70,9 +75,8 @@ class LoketController extends Controller
             'bidang' => 'required|array|min:1',
             'bidang.*.nib' => 'nullable|string|max:50',
             'bidang.*.no_sertifikat_lama' => 'nullable|string|max:100',
-            'bidang.*.jenis_hak' => 'nullable|in:HM,HGB,HGU,HP,HPL',
+            'bidang.*.jenis_hak' => ['nullable', Rule::in(JenisHak::where('is_active', true)->pluck('kode')->all() ?: ['HM', 'HGB', 'HGU', 'HP', 'HPL'])],
             'bidang.*.nama_pemegang_hak' => 'nullable|string|max:200',
-            'bidang.*.luas_m2' => 'nullable|numeric|min:0',
             'bidang.*.desa_kelurahan' => 'nullable|string|max:100',
             'bidang.*.kecamatan' => 'nullable|string|max:100',
         ]);
@@ -80,7 +84,6 @@ class LoketController extends Controller
         return DB::transaction(function () use ($validated) {
             $jp = JenisPermohonan::findOrFail($validated['jenis_permohonan_id']);
             $today = Carbon::today();
-            $targetSelesai = $today->copy()->addDays($jp->batas_hari_sla);
 
             $user = Auth::user();
             $kodeTiket = $validated['kode_tiket'];
@@ -95,7 +98,6 @@ class LoketController extends Controller
                 'nama_pemohon' => $validated['nama_pemohon'],
                 'nik_pemohon' => $validated['nik_pemohon'] ?? null,
                 'no_hp_pemohon' => $validated['no_hp_pemohon'],
-                'satuan_kerja' => $validated['satuan_kerja'] ?? null,
                 'no_hak_sekarang' => $validated['no_hak_sekarang'] ?? null,
                 'no_hak_sebelumnya' => $validated['no_hak_sebelumnya'] ?? null,
                 'kelurahan_desa' => $validated['kelurahan_desa'] ?? null,
@@ -106,7 +108,6 @@ class LoketController extends Controller
                 'nomor_telepon' => $validated['no_hp_pemohon'],
                 'created_by' => $user->id,
                 'status' => 'diterima',
-                'tanggal_target_selesai' => $targetSelesai,
                 'keterangan' => $validated['keterangan'] ?? null,
             ]);
 
@@ -117,7 +118,6 @@ class LoketController extends Controller
                     'no_sertifikat_lama' => $b['no_sertifikat_lama'] ?? null,
                     'jenis_hak' => $b['jenis_hak'] ?? null,
                     'nama_pemegang_hak' => $b['nama_pemegang_hak'] ?? null,
-                    'luas_m2' => $b['luas_m2'] ?? null,
                     'desa_kelurahan' => $b['desa_kelurahan'] ?? ($validated['kelurahan_desa'] ?? null),
                     'kecamatan' => $b['kecamatan'] ?? ($validated['kecamatan'] ?? null),
                     'urutan' => $i + 1,
@@ -129,11 +129,11 @@ class LoketController extends Controller
                 'stage_dari' => 'Pendaftaran',
                 'stage_ke' => 'DB Admin',
                 'changed_by' => $user->id,
-                'keterangan' => 'Berkas terdaftar di Loket. Tiket masuk Database Admin.',
+                'keterangan' => 'Berkas terdaftar di Loket dan masuk Database Admin.',
             ]);
 
             return redirect()->route('loket.show', $tiket->id)
-                ->with('success', "Tiket {$tiket->kode_tiket} berhasil didaftarkan. Berkas kini berada di Database Admin.");
+                ->with('success', "Berkas {$tiket->kode_tiket} berhasil didaftarkan. Berkas kini berada di Database Admin.");
         });
     }
 
@@ -166,7 +166,6 @@ class LoketController extends Controller
             'nama_pemohon' => 'required|string|max:200',
             'nik_pemohon' => 'nullable|string|max:20',
             'no_hp_pemohon' => 'required|string|max:20',
-            'satuan_kerja' => 'nullable|string|max:200',
             'no_hak_sekarang' => 'nullable|string|max:100',
             'kelurahan_desa' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
@@ -174,7 +173,7 @@ class LoketController extends Controller
 
         $tiket->update($validated);
 
-        return redirect()->route('loket.show', $tiket->id)->with('success', 'Data tiket berhasil diperbarui.');
+        return redirect()->route('loket.show', $tiket->id)->with('success', 'Data berkas berhasil diperbarui.');
     }
 
     /** Pemohon menyerahkan perbaikan revisi → tiket kembali ke tahap asal. */
@@ -192,7 +191,7 @@ class LoketController extends Controller
         }
 
         return redirect()->route('loket.show', $tiket->id)
-            ->with('success', "Perbaikan revisi tiket {$tiket->kode_tiket} diterima dan dikirim ke tahap berikutnya.");
+            ->with('success', "Perbaikan revisi berkas {$tiket->kode_tiket} diterima dan dikirim ke tahap berikutnya.");
     }
 
     public function printReceipt(int $id)

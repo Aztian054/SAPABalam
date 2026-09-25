@@ -5,9 +5,11 @@ use App\Http\Controllers\AlihMediaBtelController;
 use App\Http\Controllers\AlihMediaSuelController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FormPendaftaranController;
 use App\Http\Controllers\LoketController;
 use App\Http\Controllers\PemimpinController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SpaController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\ValidatorBtelController;
 use App\Http\Controllers\ValidatorSuelController;
@@ -38,6 +40,7 @@ Route::get('/tracking/{kode}', [TrackingController::class, 'show'])->name('track
 
 // Protected routes
 Route::middleware(['auth'])->group(function () {
+    // Dashboard Blade penuh (di-revert dari konsolidasi React SPA — menu SPA belum siap).
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ── Admin: DB Tiket Terpadu, User, Arsip ──
@@ -56,6 +59,43 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users', [AdminController::class, 'usersStore'])->name('users.store');
         Route::post('/users/{id}/toggle', [AdminController::class, 'usersToggle'])->name('users.toggle');
+        Route::get('/users/{id}/edit', [AdminController::class, 'usersEdit'])->name('users.edit');
+        Route::put('/users/{id}', [AdminController::class, 'usersUpdate'])->name('users.update');
+        Route::post('/users/{id}/hapus', [AdminController::class, 'usersHapus'])->name('users.hapus');
+
+        // ── Kelola Form Pendaftaran (master konten form — mandiri tanpa developer) ──
+        Route::get('/form-pendaftaran', [FormPendaftaranController::class, 'index'])->name('form-pendaftaran');
+
+        // Jenis Permohonan
+        Route::post('/form-pendaftaran/jenis-permohonan', [FormPendaftaranController::class, 'jenisPermohonanStore'])->name('form-pendaftaran.jenis-permohonan.store');
+        Route::get('/form-pendaftaran/jenis-permohonan/{id}/edit', [FormPendaftaranController::class, 'jenisPermohonanEdit'])->name('form-pendaftaran.jenis-permohonan.edit');
+        Route::put('/form-pendaftaran/jenis-permohonan/{id}', [FormPendaftaranController::class, 'jenisPermohonanUpdate'])->name('form-pendaftaran.jenis-permohonan.update');
+        Route::post('/form-pendaftaran/jenis-permohonan/{id}/toggle', [FormPendaftaranController::class, 'jenisPermohonanToggle'])->name('form-pendaftaran.jenis-permohonan.toggle');
+        Route::post('/form-pendaftaran/jenis-permohonan/{id}/hapus', [FormPendaftaranController::class, 'jenisPermohonanDestroy'])->name('form-pendaftaran.jenis-permohonan.hapus');
+
+        // Persyaratan Dokumen
+        Route::post('/form-pendaftaran/persyaratan', [FormPendaftaranController::class, 'persyaratanStore'])->name('form-pendaftaran.persyaratan.store');
+        Route::post('/form-pendaftaran/persyaratan/{id}/hapus', [FormPendaftaranController::class, 'persyaratanDestroy'])->name('form-pendaftaran.persyaratan.hapus');
+
+        // Saran Koreksi
+        Route::post('/form-pendaftaran/saran-koreksi', [FormPendaftaranController::class, 'saranKoreksiStore'])->name('form-pendaftaran.saran-koreksi.store');
+        Route::get('/form-pendaftaran/saran-koreksi/{id}/edit', [FormPendaftaranController::class, 'saranKoreksiEdit'])->name('form-pendaftaran.saran-koreksi.edit');
+        Route::put('/form-pendaftaran/saran-koreksi/{id}', [FormPendaftaranController::class, 'saranKoreksiUpdate'])->name('form-pendaftaran.saran-koreksi.update');
+        Route::post('/form-pendaftaran/saran-koreksi/{id}/hapus', [FormPendaftaranController::class, 'saranKoreksiDestroy'])->name('form-pendaftaran.saran-koreksi.hapus');
+
+        // Jenis Hak
+        Route::post('/form-pendaftaran/jenis-hak', [FormPendaftaranController::class, 'jenisHakStore'])->name('form-pendaftaran.jenis-hak.store');
+        Route::get('/form-pendaftaran/jenis-hak/{id}/edit', [FormPendaftaranController::class, 'jenisHakEdit'])->name('form-pendaftaran.jenis-hak.edit');
+        Route::put('/form-pendaftaran/jenis-hak/{id}', [FormPendaftaranController::class, 'jenisHakUpdate'])->name('form-pendaftaran.jenis-hak.update');
+        Route::post('/form-pendaftaran/jenis-hak/{id}/toggle', [FormPendaftaranController::class, 'jenisHakToggle'])->name('form-pendaftaran.jenis-hak.toggle');
+        Route::post('/form-pendaftaran/jenis-hak/{id}/hapus', [FormPendaftaranController::class, 'jenisHakDestroy'])->name('form-pendaftaran.jenis-hak.hapus');
+
+        // Kategori Permohonan
+        Route::post('/form-pendaftaran/kategori', [FormPendaftaranController::class, 'kategoriStore'])->name('form-pendaftaran.kategori.store');
+        Route::get('/form-pendaftaran/kategori/{id}/edit', [FormPendaftaranController::class, 'kategoriEdit'])->name('form-pendaftaran.kategori.edit');
+        Route::put('/form-pendaftaran/kategori/{id}', [FormPendaftaranController::class, 'kategoriUpdate'])->name('form-pendaftaran.kategori.update');
+        Route::post('/form-pendaftaran/kategori/{id}/toggle', [FormPendaftaranController::class, 'kategoriToggle'])->name('form-pendaftaran.kategori.toggle');
+        Route::post('/form-pendaftaran/kategori/{id}/hapus', [FormPendaftaranController::class, 'kategoriDestroy'])->name('form-pendaftaran.kategori.hapus');
     });
 
     // ── Pemimpin: Monitoring ──
@@ -67,7 +107,6 @@ Route::middleware(['auth'])->group(function () {
     // ── Stage 1: Loket ──
     Route::middleware(['role:loket'])->prefix('loket')->name('loket.')->group(function () {
         Route::get('/', [LoketController::class, 'index'])->name('index');
-        Route::get('/create', [LoketController::class, 'create'])->name('create');
         Route::post('/', [LoketController::class, 'store'])->name('store');
         Route::get('/{id}', [LoketController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [LoketController::class, 'edit'])->name('edit');
@@ -98,6 +137,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}', [WarkahController::class, 'show'])->name('show');
         Route::get('/{id}/print-perbaikan', [WarkahController::class, 'printPerbaikan'])->name('print-perbaikan');
         Route::post('/{id}/simpan', [WarkahController::class, 'simpanProgres'])->name('simpan');
+        Route::post('/{id}/kirim', [WarkahController::class, 'kirim'])->name('kirim');
+        Route::post('/{id}/pengembalian', [WarkahController::class, 'catatPengembalian'])->name('pengembalian');
         Route::post('/{id}/selesai', [WarkahController::class, 'selesai'])->name('selesai');
         Route::post('/{id}/revisi', [WarkahController::class, 'revisi'])->name('revisi');
         Route::post('/{id}/lepas', [WarkahController::class, 'lepas'])->name('lepas');
@@ -164,3 +205,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/print-rapi', [ReportController::class, 'printRapi'])->name('print_rapi');
         });
 });
+
+/*
+| React SPA (Fase 1): fallback untuk halaman yang sudah dimigrasikan.
+| Route Blade di atas lebih spesifik dan tetap menangani halaman lama;
+| prefix /app dilayani penuh oleh React Router.
+*/
+Route::get('app/{any?}', SpaController::class)->where('any', '.*')->name('app');

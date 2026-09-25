@@ -6,4 +6,26 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand Kantor Pertanahan — BPN BALAM (konsisten dengan tema Blade) */
+    --color-navy: #0b2239;
+    --color-navy-light: #163659;
+    --color-navy-dark: #061524;
+    --color-gold: #c69214;
+    --color-gold-hover: #b0810f;
+    --color-bpn-bg: #f4f6f9;
+
+    /* Animasi dashboard modern */
+    --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+    @keyframes fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 }

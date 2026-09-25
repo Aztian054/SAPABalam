@@ -15,7 +15,20 @@ Alih Media memproses berkas menjadi **sertifikat elektronik** (alih media). Terb
 
 > ⚠️ **Gate AND penuh:** Mesin pencarian tetap menampilkan tiket, tetapi tombol aksi Alih Media **terbuka hanya jika SEMUA tahap selesai** — verifikasi `lengkap`, warkah selesai (+ `diserahkan_ke_validator`), validasi BT selesai, dan validasi SU selesai. Tidak cukup hanya kedua Validator selesai.
 >
-> Jabatan Alih Media boleh dipakai **banyak akun** (mis. beberapa petugas Alih Media BT & beberapa petugas Alih Media SU); tiap akun hanya mengerjakan tiket di daftarnya sendiri (Exclusive Claim per jabatan).
+> Jabatan Alih Media boleh dipakai **banyak akun**; tiap akun hanya mengerjakan tiket di daftarnya sendiri (Exclusive Claim per jabatan).
+
+---
+
+## 4. Gate/Aturan di Kode (TiketFlowService.php)
+
+```php
+'alih_media_btel' => ['verifikasi', 'warkah', 'validasi_btel', 'validasi_suel'],
+'alih_media_suel' => ['verifikasi', 'warkah', 'validasi_btel', 'validasi_suel'],
+```
+
+**Artinya:**
+- Alih Media dapat Add tiket **HANYA** jika SEMUA tahap sebelumnya selesai (AND gate penuh)
+- Tidak cukup hanya Validator BT & SU selesai — harus tunggu Verifikasi + Warkah juga
 
 ---
 
@@ -96,4 +109,4 @@ baru ada setelah SEMUA tahap sebelumnya selesai — verifikasi 'lengkap', warkah
 
 ---
 
-*Dokumen ini bagian dari panduan alur LOKET 2026 — diselaraskan dengan `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` + konfigurasi alur paralel (gate Alih Media AND penuh: semua tahap selesai).*
+Dokumen ini bagian dari panduan alur LOKET 2026 - diselaraskan dengan kode sumber TiketFlowService.php v2.3 (17 September 2026).

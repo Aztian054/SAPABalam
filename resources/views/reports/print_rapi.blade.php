@@ -13,10 +13,13 @@
             @page { margin: 1.5cm; size: landscape; }
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 11pt; }
-        .header-print { border-bottom: 3px double #0d6efd; padding-bottom: 10px; margin-bottom: 20px; }
+        .header-print { border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 16px; }
+        .col-no { width: 30px; }
     </style>
 </head>
 <body class="p-4">
+    @include('partials.kop_surat')
+
     <div class="header-print d-flex justify-content-between align-items-center">
         <div>
             <h5 class="fw-bold mb-0">LAPORAN REKAPITULASI PELAYANAN PERTANAHAN</h5>
@@ -42,7 +45,7 @@
         <table class="table table-bordered table-sm align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th style="width:30px;">No</th>
+                    <th class="col-no">No</th>
                     <th>Kode Tiket</th>
                     <th>Tgl Masuk</th>
                     <th>Nama Pemohon</th>
@@ -52,17 +55,14 @@
                     <th>Kelurahan</th>
                     <th>Kecamatan</th>
                     <th>Petugas Loket</th>
-                    <th>Target SLA</th>
                     <th>Tgl Selesai</th>
                     <th>Status</th>
                     <th>Pembetulan</th>
                 </tr>
             </thead>
             <tbody>
-                @php $today = \Carbon\Carbon::today(); @endphp
                 @forelse($tikets as $idx => $t)
-                    @php $isOverdue = $t->status !== 'selesai' && $t->status !== 'batal' && $t->tanggal_target_selesai && $t->tanggal_target_selesai->lt($today); @endphp
-                    <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
+                    <tr>
                         <td>{{ $idx + 1 }}</td>
                         <td class="fw-bold">{{ $t->kode_tiket }}</td>
                         <td>{{ $t->tanggal_masuk?->format('d/m/Y') }}</td>
@@ -73,19 +73,18 @@
                         <td>{{ $t->kelurahan_desa ?? '-' }}</td>
                         <td>{{ $t->kecamatan ?? '-' }}</td>
                         <td>{{ $t->petugasLoket?->name ?? '-' }}</td>
-                        <td>{{ $t->tanggal_target_selesai?->format('d/m/Y') ?? '-' }}</td>
                         <td>{{ $t->tanggal_selesai?->format('d/m/Y') ?? '-' }}</td>
                         <td><span class="badge bg-{{ $t->status_badge }}">{{ $t->status_label }}</span></td>
                         <td class="text-center">{{ $t->status_pembetulan }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="14" class="text-center text-muted py-3">Tidak ada data pada filter ini.</td></tr>
+                    <tr><td colspan="13" class="text-center text-muted py-3">Tidak ada data pada filter ini.</td></tr>
                 @endforelse
             </tbody>
             <tfoot>
                 <tr class="table-light fw-bold">
-                    <td colspan="6" class="text-end">Total: {{ $tikets->count() }} tiket</td>
-                    <td colspan="8"></td>
+                    <td colspan="6" class="text-end">Total: {{ $tikets->count() }} berkas</td>
+                    <td colspan="7"></td>
                 </tr>
             </tfoot>
         </table>

@@ -50,14 +50,14 @@
                 <tr>
                     <td colspan="7" class="text-center text-muted py-5">
                         <i class="bi bi-search fs-2 d-block mb-2"></i>
-                        Tidak ditemukan tiket yang dapat di-Add
+                        Tidak ditemukan berkas yang dapat di-Add
                         @if($search) untuk pencarian "{{ $search }}".@endif
                         @php $isValidatorStage = in_array($stage ?? '', ['validasi_btel', 'validasi_suel'], true); @endphp
                         <small class="d-block mt-1">
                             @if($isValidatorStage)
-                                Pastikan Warkah telah menandai status sertipikat <strong>DISERAHKAN</strong> pada tiket yang dicari.
+                                Pastikan Warkah telah menandai status sertipikat <strong>DISERAHKAN</strong> pada berkas yang dicari.
                             @else
-                                Pastikan tahap prasyarat telah selesai pada tiket yang dicari.
+                                Pastikan tahap prasyarat telah selesai pada berkas yang dicari.
                             @endif
                         </small>
                     </td>

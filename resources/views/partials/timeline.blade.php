@@ -9,8 +9,8 @@
             <div class="timeline">
                 @foreach($tiket->riwayatStatuses as $r)
                     <div class="d-flex gap-3 mb-3">
-                        <div class="text-center" style="min-width:34px;">
-                            <span class="d-inline-block rounded-circle bg-primary text-white fw-bold" style="width:30px;height:30px;line-height:30px;font-size:0.7rem;">{{ $loop->iteration }}</span>
+                        <div class="text-center timeline-label">
+                            <span class="d-inline-block rounded-circle bg-primary text-white fw-bold timeline-badge">{{ $loop->iteration }}</span>
                         </div>
                         <div>
                             <div class="fw-semibold text-dark small">{{ $r->stage_dari }} → {{ $r->stage_ke }}</div>

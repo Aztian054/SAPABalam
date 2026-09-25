@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Admin — Tiket Selesai')
+@section('title', 'Admin — Berkas Selesai')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-check2-circle text-success me-2"></i>Tiket Selesai (Menunggu Arsip)</h4>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-check2-circle text-success me-2"></i>Berkas Selesai (Menunggu Arsip)</h4>
     </div>
 
     {{-- ═══ Filter Card ═══ --}}
@@ -37,8 +37,8 @@
                     <label class="form-label small fw-semibold">Jenis Hak</label>
                     <select name="jenis_hak" class="form-select form-select-sm">
                         <option value="">Semua Hak</option>
-                        @foreach(['HM','HGB','HGU','HP','HPL'] as $jh)
-                            <option value="{{ $jh }}" @selected(request('jenis_hak') == $jh)>{{ $jh }}</option>
+                        @foreach($jenisHaks as $jh)
+                            <option value="{{ $jh->kode }}" @selected(request('jenis_hak') == $jh->kode)>{{ $jh->kode }} — {{ $jh->nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -52,7 +52,7 @@
                     </select>
                 </div>
                 <div class="col-md-2 d-flex gap-1">
-                    <button class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+                    <button class="btn btn-gold btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
                     <a href="{{ route('admin.selesai') }}" class="btn btn-outline-secondary btn-sm" title="Reset filter"><i class="bi bi-x-lg"></i></a>
                 </div>
             </form>
@@ -65,7 +65,7 @@
             <table class="table table-hover align-middle mb-0" id="tblSelesai">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:40px"><input type="checkbox" class="form-check-input" id="chkAll" title="Centang semua di halaman ini"></th>
+                        <th class="col-check"><input type="checkbox" class="form-check-input" id="chkAll" title="Centang semua di halaman ini"></th>
                         <th>Kode Tiket</th><th>Pemohon</th><th>Jenis</th><th>Hak</th><th>Selesai</th><th>Pembetulan</th><th>Arsip</th><th class="text-end">Aksi</th>
                     </tr>
                 </thead>
@@ -94,27 +94,27 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.show', $t->id) }}" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></a>
+                                <a href="{{ route('admin.show', $t->id) }}" class="btn btn-sm btn-gold"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center text-muted py-5">Belum ada tiket selesai sesuai filter.</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted py-5">Belum ada berkas selesai sesuai filter.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-            <div class="text-muted small">Menampilkan {{ $tikets->firstItem() ?? 0 }}–{{ $tikets->lastItem() ?? 0 }} dari {{ $tikets->total() }} tiket</div>
+            <div class="text-muted small">Menampilkan {{ $tikets->firstItem() ?? 0 }}–{{ $tikets->lastItem() ?? 0 }} dari {{ $tikets->total() }} berkas</div>
             {{ $tikets->links() }}
         </div>
     </div>
     {{-- ═══ Floating Bulk Action Bar ═══ --}}
     <div id="bulkBar" class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-lg py-2 px-3 d-none" style="z-index:1050;">
         <div class="container d-flex justify-content-between align-items-center">
-            <span class="text-dark"><strong id="bulkCount">0</strong> tiket dipilih <span class="text-muted small ms-2">(yang sudah diarsip diabaikan)</span></span>
+            <span class="text-dark"><strong id="bulkCount">0</strong> berkas dipilih <span class="text-muted small ms-2">(yang sudah diarsip diabaikan)</span></span>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-primary btn-sm" onclick="openBulkModal('selected')"><i class="bi bi-archive me-1"></i>Arsipkan Terpilih</button>
-                <button class="btn btn-primary btn-sm" onclick="openBulkModal('all')"><i class="bi bi-archive-fill me-1"></i>Arsipkan Semua Hasil Filter</button>
+                <button class="btn btn-gold btn-sm" onclick="openBulkModal('all')"><i class="bi bi-archive-fill me-1"></i>Arsipkan Semua Hasil Filter</button>
             </div>
         </div>
     </div>
@@ -124,7 +124,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h6 class="modal-title fw-bold" id="bulkModalLabel"><i class="bi bi-archive me-1"></i>Arsipkan Tiket Massal</h6>
+                    <h6 class="modal-title fw-bold" id="bulkModalLabel"><i class="bi bi-archive me-1"></i>Arsipkan Berkas Massal</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <form id="bulkForm" method="POST" action="{{ route('admin.selesai.arsipkan-massal') }}">
@@ -167,7 +167,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary" id="bulkSubmitBtn"><i class="bi bi-archive me-1"></i>Arsipkan</button>
+                        <button type="submit" class="btn btn-gold" id="bulkSubmitBtn"><i class="bi bi-archive me-1"></i>Arsipkan</button>
                     </div>
                 </form>
             </div>
@@ -212,14 +212,14 @@ function openBulkModal(mode) {
     const total = checked.length;
 
     if (mode === 'selected') {
-        if (total === 0) { alert('Centang minimal satu tiket terlebih dahulu.'); return; }
+        if (total === 0) { alert('Centang minimal satu berkas terlebih dahulu.'); return; }
         bulkSemua.value = '0';
         bulkIds.value = [...checked].map(cb => cb.value).join(',');
-        info.innerHTML = `<i class="bi bi-info-circle me-1"></i>akan mengarsipkan <strong>${total}</strong> tiket terpilih.`;
+        info.innerHTML = `<i class="bi bi-info-circle me-1"></i>akan mengarsipkan <strong>${total}</strong> berkas terpilih.`;
     } else {
         bulkSemua.value = '1';
         bulkIds.value = '';
-        info.innerHTML = `<i class="bi bi-info-circle me-1"></i>akan mengarsipkan <strong>semua tiket</strong> sesuai filter aktif (yang sudah diarsip diabaikan).`;
+        info.innerHTML = `<i class="bi bi-info-circle me-1"></i>akan mengarsipkan <strong>semua berkas</strong> sesuai filter aktif (yang sudah diarsip diabaikan).`;
     }
 
     const modal = new bootstrap.Modal(document.getElementById('bulkModal'));

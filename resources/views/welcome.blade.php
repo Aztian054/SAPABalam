@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'LOKET 2026') }} &mdash; Sistem Pelayanan Pertanahan</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('asset/images/logobpn2026.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -16,6 +17,9 @@
         .feature-card { border:none; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.05); transition:transform .2s; }
         .feature-card:hover { transform:translateY(-4px); }
         .footer-landing { background:var(--navy); }
+        .max-w-560 { max-width:560px; }
+        .hero-logo { width:150px; height:150px; object-fit:contain; }
+        .feature-icon { width:48px; height:48px; }
     </style>
 </head>
 <body>
@@ -28,9 +32,9 @@
                     <small class="text-white-50">Sistem Resmi Kantor Pertanahan</small>
                 </div>
                 <h1 class="text-white mb-3 fw-bold" style="font-size:2.6rem">{{ config('app.name','LOKET 2026') }}</h1>
-                <p class="lead text-white-50 mb-4" style="max-width:560px">Digitalisasi alur permohonan pelayanan pertanahan &mdash; satu basis data terpusat, alur kerja 8 stage paralel, cetak formulir, tracking publik, dan arsip digital.</p>
+                <p class="lead text-white-50 mb-4 max-w-560">Digitalisasi alur permohonan pelayanan pertanahan &mdash; satu basis data terpusat, alur kerja 8 stage paralel, cetak formulir, tracking publik, dan arsip digital.</p>
                 <div class="d-flex gap-3 flex-wrap">
-                    <a href="{{ route('tracking.index') }}" class="btn btn-light btn-lg px-4"><i class="bi bi-search me-2"></i>Cek Status Tiket</a>
+                    <a href="{{ route('tracking.index') }}" class="btn btn-light btn-lg px-4"><i class="bi bi-search me-2"></i>Cek Status Berkas</a>
                     @auth
                         <a href="{{ route('dashboard') }}" class="btn btn-gold btn-lg px-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
                     @else
@@ -39,8 +43,8 @@
                 </div>
             </div>
             <div class="col-lg-5 text-center text-lg-end">
-                <i class="bi bi-building-check text-warning" style="font-size:5rem"></i>
-                <div class="text-white-50 small mt-2">Sistem Loket Pelayanan<br>Pertanahan Elektronik</div>
+                <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo Kementerian ATR/BPN" class="img-fluid rounded-4 bg-white p-2 shadow-lg hero-logo">
+                <div class="text-white-50 small mt-3">Sistem Loket Pelayanan<br>Pertanahan Elektronik</div>
             </div>
         </div>
     </div>
@@ -52,21 +56,21 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card feature-card p-4 h-100">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:48px;height:48px"><i class="bi bi-person-plus-fill fs-5"></i></div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3 feature-icon"><i class="bi bi-person-plus-fill fs-5"></i></div>
                     <h5 class="fw-bold">Pendaftaran Loket</h5>
                     <p class="text-muted mb-0 small">Berkas didaftarkan dengan nomor tiket, data pemohon, jenis permohonan, dan informasi bidang tanah.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card feature-card p-4 h-100">
-                    <div class="bg-info bg-opacity-10 text-info rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:48px;height:48px"><i class="bi bi-search fs-5"></i></div>
+                    <div class="bg-info bg-opacity-10 text-info rounded-3 d-inline-flex align-items-center justify-content-center mb-3 feature-icon"><i class="bi bi-search fs-5"></i></div>
                     <h5 class="fw-bold">Pemeriksaan & Warkah</h5>
                     <p class="text-muted mb-0 small">Verifikator memeriksa kelengkapan berkas secara paralel dengan Warkah menyiapkan data pendukung.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card feature-card p-4 h-100">
-                    <div class="bg-success bg-opacity-10 text-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:48px;height:48px"><i class="bi bi-check-circle-fill fs-5"></i></div>
+                    <div class="bg-success bg-opacity-10 text-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3 feature-icon"><i class="bi bi-check-circle-fill fs-5"></i></div>
                     <h5 class="fw-bold">Validasi & Alih Media</h5>
                     <p class="text-muted mb-0 small">Validator BT & SU memvalidasi, Alih Media memproses &mdash; sertifikat elektronik terbit.</p>
                 </div>
@@ -80,7 +84,7 @@
             <div class="col-6 col-md-3"><h2 class="fw-bold text-primary mb-1">9</h2><small class="text-muted text-uppercase fw-semibold">Role Pengguna</small></div>
             <div class="col-6 col-md-3"><h2 class="fw-bold text-primary mb-1">8</h2><small class="text-muted text-uppercase fw-semibold">Stage Alur</small></div>
             <div class="col-6 col-md-3"><h2 class="fw-bold text-primary mb-1">100%</h2><small class="text-muted text-uppercase fw-semibold">Digital Real-Time</small></div>
-            <div class="col-6 col-md-3"><h2 class="fw-bold text-primary mb-1">SLA</h2><small class="text-muted text-uppercase fw-semibold">Monitoring Target</small></div>
+            <div class="col-6 col-md-3"><h2 class="fw-bold text-primary mb-1">6 Tahap</h2><small class="text-muted text-uppercase fw-semibold">Proses Paralel</small></div>
         </div>
     </div>
 </section>

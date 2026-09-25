@@ -40,7 +40,6 @@ class AdminSelesaiArsipTest extends TestCase
             'kode' => $kode,
             'nama' => "Permohonan {$kode}",
             'kategori' => 'umum',
-            'batas_hari_sla' => 7,
             'is_active' => true,
         ]);
     }

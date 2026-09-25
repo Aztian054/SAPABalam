@@ -26,7 +26,7 @@
                             <label class="form-label">Lokasi Fisik</label>
                             <input name="lokasi_fisik" class="form-control" placeholder="mis. Rak 3, Lemari 2">
                         </div>
-                        <button class="btn btn-primary"><i class="bi bi-folder-plus me-1"></i>Simpan Folder</button>
+                        <button class="btn btn-gold"><i class="bi bi-folder-plus me-1"></i>Simpan Folder</button>
                     </form>
                 </div>
             </div>

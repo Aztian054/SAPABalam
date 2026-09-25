@@ -1,24 +1,29 @@
-# 00 — Alur Lengkap Sistem LOKET 2026 (Revisi Final)
+# 00 — Alur Lengkap Sistem LOKET 2026 (Revisi Final v2.3)
 
 > **Sistem Loket Pertanahan Elektronik BMN BALAM**
-> Evaluasi Alur Final — **9 Role / 8 Stage** — sesuai `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` (12 September 2026).
-> **Konfigurasi Alur Paralel (13 Sep 2026):** Verifikator ║ Warkah bekerja paralel; Validator BT/SU mulai setelah Warkah menandai `diserahkan_ke_validator`; Alih Media hanya untuk tiket yang **semua** tahap selesai; nomor tiket **manual** (format bebas).
+> Evaluasi Alur Final — **9 Role / 8 Stage** — sesuai `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx`.
+> **Konfigurasi Alur Baru (17 Sep 2026):** Verifikasi → Warkah (sekuensial, bukan paralel); Warkah 2 fase (Diserahkan + Dikembalikan); Validator BT/SU mulai setelah Warkah fase 1 selesai + flag `diserahkan_ke_validator`; Alih Media gate AND penuh; Nomor tiket **manual** (format bebas).
 
 ---
 
 ## 1. Ringkasan Sistem
 
-LOKET 2026 mengelola alur berkas permohonan pertanahan dari pendaftaran di **Loket** hingga **Selesai/Arsip**. Setiap tiket berjalan melalui **8 stage utama** dengan **jalur paralel** antar tahapan yang tidak saling menunggu:
+LOKET 2026 mengelola alur berkas permohonan pertanahan dari pendaftaran di **Loket** hingga **Selesai/Arsip**. Setiap tiket berjalan melalui **8 stage utama** dengan kombinasi **sekuensial + paralel**:
 
 ```
-LOKET ──▶ DB ADMIN ──▶ (VERIFIKATOR ║ WARKAH) ──▶ (VALIDATOR BT ║ VALIDATOR SU) ──▶ (ALIH MEDIA BT ║ ALIH MEDIA SU) ──▶ SELESAI ──▶ ARSIP
+LOKET → DB ADMIN → VERIFIKASI → WARKAH (Diserahkan)
+                         ↓
+                    (VALIDATOR BT ║ VALIDATOR SU) ║
+                         ↓
+                    (ALIH MEDIA BT ║ ALIH MEDIA SU) → WARKAH (Dikembalikan) → SELESAI → ARSIP
 ```
 
-Perbedaan kunci dari alur seri sebelumnya:
-- **Nomor tiket diisi MANUAL oleh akun Loket — format bebas** (tidak auto-generate).
-- **Verifikator ║ Warkah bekerja PARALEL** sejak tiket masuk DB Admin; keduanya tidak saling menunggu.
-- **Validator BT & SU mulai setelah Warkah menandai `diserahkan_ke_validator = true`** — tanpa menunggu Verifikator.
+**Perbedaan kunci dari alur sebelumnya (17 Sep 2026):**
+- **Verifikasi → Warkah SEKUENSIAL** (Verifikasi HARUS selesai dulu sebelum Warkah mulai — bukan paralel lagi).
+- **Warkah memiliki 2 fase:** Fase 1 (Diserahkan ke Validator setelah Verifikasi selesai), Fase 2 (Dikembalikan setelah Alih Media selesai — trigger Selesai total).
+- **Validator BT & SU berjalan PARALEL** saat Warkah fase 1 selesai + flag `diserahkan_ke_validator = true` — tanpa menunggu Verifikasi.
 - **Alih Media BT & SU hanya terbuka untuk tiket yang SEMUA tahap sebelumnya selesai** (gate AND penuh).
+- **Nomor tiket diisi MANUAL oleh akun Loket — format bebas** (tidak auto-generate).
 - **Setiap jabatan boleh memiliki banyak akun**; tiap akun hanya melihat & mengerjakan tiket di daftar pribadinya (**Exclusive Ticket Claiming** per jabatan).
 - **Pemisahan BT/SU hanya di tahap Validator (Stage 4) dan Alih Media (Stage 5).**
 - Semua akun stage bekerja dengan pola **Search → Add → Process → Selesai → Back to Admin** terhadap **Daftar Tiket Admin (Database)**.
@@ -27,18 +32,18 @@ Perbedaan kunci dari alur seri sebelumnya:
 
 ## 2. Struktur 8 Stage & Konsep Desain
 
-### 2.1 Struktur 8 Stage
+### 2.1 Struktur 8 Stage (Sekuensial + Paralel)
 
-| Stage | Jabatan (Role) | Pemisahan BT/SU |
-|---|---|---|
-| 1 | Loket | Semua jenis permohonan |
-| 2 | Verifikator | Semua jenis permohonan — **paralel** dgn Warkah |
-| 3 | Warkah | Semua jenis permohonan; menyiapkan BT & SU — **paralel** dgn Verifikator |
-| 4A | Validator Pra-BTel | KHUSUS Buku Tanah (BT) |
-| 4B | Validator Pra-SuEl | KHUSUS Surat Ukur (SU) |
-| 5A | Alih Media Pra-BTel | KHUSUS Buku Tanah (BT) |
-| 5B | Alih Media Pra-SuEl | KHUSUS Surat Ukur (SU) |
-| Selesai | Semua jabatan + Admin | Tiket selesai semua tahap |
+| Stage | Jabatan (Role) | Alur | Pemisahan BT/SU |
+|---|---|---|---|
+| 1 | Loket | Input | Semua jenis permohonan |
+| 2 | Verifikator | Sekuensial | Semua jenis permohonan — **HARUS selesai sebelum Warkah** |
+| 3 | Warkah | 2 Fase | Semua jenis; menyiapkan BT & SU — **Fase 1: Diserahkan (gate: Verifikasi selesai)**; **Fase 2: Dikembalikan (gate: AM selesai)** |
+| 4A | Validator Pra-BTel | Paralel | KHUSUS Buku Tanah (BT) — gate: Warkah fase 1 + `diserahkan_ke_validator` |
+| 4B | Validator Pra-SuEl | Paralel | KHUSUS Surat Ukur (SU) — gate: Warkah fase 1 + `diserahkan_ke_validator` |
+| 5A | Alih Media Pra-BTel | Paralel | KHUSUS Buku Tanah (BT) — gate AND: semua tahap selesai |
+| 5B | Alih Media Pra-SuEl | Paralel | KHUSUS Surat Ukur (SU) — gate AND: semua tahap selesai |
+| Selesai | Semua jabatan + Admin | Final | Tiket selesai semua tahap (trigger: AM BT & AM SU selesai + Warkah dikembalikan) |
 
 ### 2.2 Konsep Desain: RBAC + Multi-Stage Workflow
 
@@ -47,9 +52,9 @@ Sistem memadukan manajemen hak akses berbasis **jabatan (Role-Based Access Contr
 | Konsep | Penjelasan |
 |---|---|
 | **RBAC (Role-Based Access Control)** | Setiap jabatan memiliki `role` sendiri; middleware `role` membuka hanya menu & halaman milik jabatan tersebut. |
-| **Multi-Stage Workflow (FSM)** | Status tiket berpindah antar tahap dengan aturan transisi eksplisit: `diterima` → `verifikasi` / `warkah` → `validasi_btel` / `validasi_suel` → `alih_media_btel` / `alih_media_suel` → `selesai`. |
-| **Parallel Gateway** | Verifikator ║ Warkah berjalan paralel; setelah Warkah menandai `diserahkan_ke_validator`, Validator BT ║ Validator SU juga paralel. |
-| **Conditional Gateway** | Validator BT/SU baru bisa meng-Add tiket saat `diserahkan_ke_validator = true`; Alih Media hanya untuk tiket yang **semua** tahap sebelumnya `selesai`. |
+| **Multi-Stage Workflow (FSM)** | Status tiket berpindah antar tahap dengan aturan transisi eksplisit; Verifikasi → Warkah (sekuensial); Validator BT & SU (paralel); Alih Media (paralel); Selesai. |
+| **Sequential & Parallel Gateways** | Verifikasi → Warkah sekuensial (gate: Verifikasi selesai); Validator BT & SU paralel (gate: Warkah fase 1 selesai + `diserahkan_ke_validator`); Alih Media paralel (gate AND: semua selesai). |
+| **Conditional Gateway & Trigger** | Warkah fase 2 trigger: dikembalikan setelah AM BT & AM SU selesai; Selesai total trigger: AM BT & AM SU selesai + Warkah dikembalikan. |
 | **Exclusive Ticket Claiming** | Action "Add" bersifat eksklusif per jabatan: tiket yang sudah di-Add satu akun tidak bisa di-Add akun lain di **jabatan yang sama** (anti duplikat). |
 | **Jabatan realtime** | Admin dapat mengubah jabatan akun kapan saja; perubahan berlaku **real-time** pada hak akses sistem. |
 
@@ -62,12 +67,12 @@ Sistem memadukan manajemen hak akses berbasis **jabatan (Role-Based Access Contr
 | 1 | Admin | `admin` | Semua | Kelola Database, tiket, revisi, arsip, dan akun |
 | 2 | Pemimpin | `pemimpin` | Monitoring | View-only, aksi terkunci |
 | 3 | Loket | `loket` | Stage 1 | Registrasi tiket; **nomor tiket manual (format bebas)** |
-| 4 | Verifikator | `verifikator` | Stage 2 | **Paralel** dgn Warkah; Exclusive Claim per jabatan |
-| 5 | Warkah | `warkah` | Stage 3 | **Paralel** dgn Verifikator; menandai `diserahkan_ke_validator` |
-| 6 | Validator BT | `validator_btel` | Stage 4A | Mulai saat `diserahkan_ke_validator`; tanpa menunggu Verifikator |
-| 7 | Validator SU | `validator_suel` | Stage 4B | Mulai saat `diserahkan_ke_validator`; tanpa menunggu Verifikator |
-| 8 | Alih Media BT | `alih_media_btel` | Stage 5A | Hanya jika **SEMUA** tahap sebelumnya selesai |
-| 9 | Alih Media SU | `alih_media_suel` | Stage 5B | Hanya jika **SEMUA** tahap sebelumnya selesai |
+| 4 | Verifikator | `verifikator` | Stage 2 | **Sekuensial** (HARUS selesai sebelum Warkah mulai); Exclusive Claim per jabatan |
+| 5 | Warkah | `warkah` | Stage 3 | **2 Fase:** Diserahkan (gate: Verifikasi selesai) & Dikembalikan (gate: AM selesai); menandai `diserahkan_ke_validator` |
+| 6 | Validator BT | `validator_btel` | Stage 4A | Mulai saat Warkah fase 1 selesai + `diserahkan_ke_validator`; tanpa menunggu Verifikasi |
+| 7 | Validator SU | `validator_suel` | Stage 4B | Mulai saat Warkah fase 1 selesai + `diserahkan_ke_validator`; tanpa menunggu Verifikasi |
+| 8 | Alih Media BT | `alih_media_btel` | Stage 5A | Hanya jika **SEMUA** tahap sebelumnya selesai (gate AND penuh) |
+| 9 | Alih Media SU | `alih_media_suel` | Stage 5B | Hanya jika **SEMUA** tahap sebelumnya selesai (gate AND penuh) |
 
 ---
 
@@ -78,24 +83,39 @@ Sistem memadukan manajemen hak akses berbasis **jabatan (Role-Based Access Contr
    → tersimpan di Daftar Tiket Loket (milik akun sendiri)
    sekaligus masuk ke Daftar Tiket Admin (database seluruh tiket).
 
-2. KEDUA JALUR PARALEL dimulai dari DB Admin:
-   • VERIFIKATOR mencari tiket (nomor tiket / nomor sertipikat, harus LENGKAP)
-     → pemeriksaan berkas fisik vs data input.
-     LENGKAP → status verifikasi 'lengkap' (salah satu syarat lanjut).
-     TIDAK lengkap → kembali ke Loket untuk revisi.
-   • WARKAH menyiapkan data pendukung BT & SU.
-     Selesai → status sertipikat DISERAHKAN + `diserahkan_ke_validator = true`.
+2. VERIFIKATOR mencari tiket dari DB Admin dan "Add" (Ambil):
+   → pemeriksaan berkas fisik vs data input
+   → LENGKAP: status verifikasi 'lengkap' → Selesai fase ini → kembali ke DB Admin
+   → TIDAK lengkap: kembali ke Loket untuk revisi via Form Perbaikan
 
-3. VALIDATOR Pra-BTel & Validator Pra-SuEl baru bisa meng-Add tiket yang sudah
-   ditandai `diserahkan_ke_validator` (TIDAK menunggu Verifikator).
-   Kedua bidang harus selesai sebelum lanjut.
+3. WARKAH (Fase 1 — Diserahkan):
+   Gate: Verifikasi harus selesai dulu
+   → mencari tiket dari DB Admin dan "Add"
+   → siapkan data pendukung BT & SU
+   → serahkan berkas ke Validator (via route warkah.kirim)
+   → set `diserahkan_ke_validator = true` + `status_pengembalian = 'dipinjam'`
+   → Selesai fase 1 → kembali ke DB Admin
 
-4. ALIH MEDIA Pra-BTel & Pra-SuEl hanya terbuka untuk tiket yang SEMUA tahap
-   sebelumnya selesai (verifikasi 'lengkap', warkah selesai + diserahkan,
-   validasi BT & SU selesai) → menyelesaikan proses alih media.
+4. VALIDATOR Pra-BTel & Validator Pra-SuEl (Paralel):
+   Gate: Warkah fase 1 selesai + `diserahkan_ke_validator = true`
+   → TIDAK menunggu Verifikasi selesai
+   → kedua bidang harus selesai sebelum lanjut ke Alih Media
 
-5. Kedua Alih Media selesai → Tiket SELESAI → kembali ke Daftar Tiket Admin,
-   dapat diarsipkan oleh Admin.
+5. ALIH MEDIA Pra-BTel & Pra-SuEl (Paralel, Gate AND Penuh):
+   Gate: Verifikasi + Warkah fase 1 + Validator BT + Validator SU SELESAI + berkas dikirim
+   → menyelesaikan proses alih media
+   → kedua sub-bidang harus selesai
+
+6. WARKAH (Fase 2 — Dikembalikan):
+   Gate: Alih Media BT & SU selesai
+   → terima pengembalian berkas fisik dari Alih Media
+   → catat kondisi pengembalian (`status_pengembalian = 'dikembalikan'`)
+   → Selesai fase 2 → **TRIGGER SELESAI TOTAL**
+
+7. Status SELESAI tercapai:
+   Condition: Alih Media BT & SU selesai + Warkah fase 2 dikembalikan
+   → Tiket berstatus `selesai` → tersimpan di Daftar Tiket Selesai
+   → Admin dapat mengarsipkan ke Arsip Folder
 ```
 
 ---
@@ -346,16 +366,17 @@ Setiap halaman stage menyajikan seksi **Daftar (Antrian Aktif Saya) / Revisi Men
 | URL | Fungsi |
 |---|---|
 | `/` | Redirect ke Dashboard (sudah login) atau Tracking Publik |
-| `/login`, `/logout` | Autentikasi |
-| `/tracking`, `/tracking/{kode}` | Tracking publik (tanpa login) |
+| `/login`, `/logout` | Autentikasi (username/email; `POST /login` rate-limit `throttle:6,1`) |
+| `/tracking`, `/tracking/{kode}` | Tracking publik (tanpa login) — cari by nomor tiket / no. telepon |
 | `/dashboard` | Dashboard utama |
-| `/admin`, `/admin/tambah-tiket`, `/admin/selesai`, `/admin/revisi`, `/admin/revisi/{id}/hapus`, `/admin/arsip`, `/admin/users` | Modul Admin |
+| `/admin`, `/admin/tambah-tiket`, `/admin/selesai` (+`/arsipkan-massal`), `/admin/revisi` (+`/{id}/hapus`), `/admin/arsip`, `/admin/users` (+`/{id}/toggle`) | Modul Admin (tanpa edit/hapus tiket) |
 | `/loket`, `/loket/create`, `/loket/{id}/resubmit` | Modul Loket |
 | `/verifikator`, `/verifikator/search`, `/verifikator/add/{id}`, `/verifikator/{id}/print-perbaikan` | Modul Verifikator |
 | `/warkah`, `/warkah/search`, `/warkah/add/{id}`, `/warkah/{id}/print-perbaikan` | Modul Warkah |
 | `/validator-bt`, `/validator-su` | Modul Validator BT/SU |
 | `/alih-media-bt`, `/alih-media-su` | Modul Alih Media BT/SU |
-| `/reports`, `/reports/print`, `/reports/export` | Laporan, print, export Excel |
+| `/reports`, `/reports/print`, `/reports/export`, `/reports/print-rapi` | Laporan, print, export Excel, print rapi |
+| `/app/{any?}` | React SPA (fallback halaman yang dimigrasikan) |
 
 ---
 

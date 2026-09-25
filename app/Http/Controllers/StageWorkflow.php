@@ -108,7 +108,7 @@ abstract class StageWorkflow extends Controller
 
         return redirect()
             ->route($this->viewBase().'.index')
-            ->with('success', "Tiket {$tiket->kode_tiket} berhasil di-Add ke antrian pekerjaan Anda.");
+            ->with('success', "Berkas {$tiket->kode_tiket} berhasil di-Add ke antrian pekerjaan Anda.");
     }
 
     /** Lihat detail tiket + lembar kerja tahap. */
@@ -147,8 +147,8 @@ abstract class StageWorkflow extends Controller
         }
 
         $msg = $tiket->status === 'selesai'
-            ? "Tiket {$tiket->kode_tiket} telah SELESAI 100% (semua tahap termasuk BT & SU beres)."
-            : "Tiket {$tiket->kode_tiket} dinyatakan selesai dan kembali ke Database Admin.";
+            ? "Berkas {$tiket->kode_tiket} telah SELESAI 100% (semua tahap termasuk BT & SU beres)."
+            : "Berkas {$tiket->kode_tiket} dinyatakan selesai dan kembali ke Database Admin.";
 
         return redirect()->route($this->viewBase().'.index')->with('success', $msg);
     }
@@ -176,7 +176,7 @@ abstract class StageWorkflow extends Controller
 
         return redirect()
             ->route($this->viewBase().'.index')
-            ->with('warning', "Tiket {$tiket->kode_tiket} dikembalikan untuk revisi ke-{$tiket->revisi_ke}.");
+            ->with('warning', "Berkas {$tiket->kode_tiket} dikembalikan untuk revisi ke-{$tiket->revisi_ke}.");
     }
 
     /** Cetak Form Permohonan Perbaikan (printable) — dokumen FINAL. */
@@ -203,7 +203,7 @@ abstract class StageWorkflow extends Controller
 
         $penugasan = $tiket->penugasanAktif($stage);
         if (! $penugasan || $penugasan->user_id !== $user->id) {
-            return back()->with('error', 'Tiket tidak sedang dalam antrian Anda.');
+            return back()->with('error', 'Berkas tidak sedang dalam antrian Anda.');
         }
 
         $penugasan->update(['status' => 'batal']);
@@ -211,7 +211,7 @@ abstract class StageWorkflow extends Controller
 
         return redirect()
             ->route($this->viewBase().'.index')
-            ->with('warning', "Tiket {$tiket->kode_tiket} dilepas kembali ke Database Admin.");
+            ->with('warning', "Berkas {$tiket->kode_tiket} dilepas kembali ke Database Admin.");
     }
 
     protected function serializeForSearch(Tiket $tiket): array

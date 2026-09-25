@@ -23,21 +23,18 @@ class Tiket extends Model
     protected $fillable = [
         'kode_tiket', 'nomor_antrian', 'nomor_urut_berkas', 'status_pembetulan',
         'tanggal_masuk', 'jenis_permohonan_id', 'nama_pemohon', 'nik_pemohon',
-        'no_hp_pemohon', 'satuan_kerja', 'no_hak_sekarang', 'no_hak_sebelumnya',
+        'no_hp_pemohon', 'no_hak_sekarang', 'no_hak_sebelumnya',
         'kelurahan_desa', 'kecamatan', 'jumlah_bidang', 'petugas_loket_id',
         'nama_petugas_loket', 'nomor_telepon', 'nomor_tiket_ppat',
         'nomor_tiket_non_ppat', 'status_pra_btel', 'status_pra_suel',
-        'revisi_ke', 'status', 'status_sps', 'tanggal_sps', 'keterangan',
-        'tanggal_target_selesai', 'tanggal_selesai', 'created_by',
+        'revisi_ke', 'status', 'keterangan',
+        'tanggal_selesai', 'created_by',
         'diserahkan_ke_validator',
     ];
 
     protected $casts = [
         'tanggal_masuk' => 'date',
-        'tanggal_sps' => 'date',
-        'tanggal_target_selesai' => 'date',
         'tanggal_selesai' => 'date',
-        'status_sps' => 'boolean',
         'jumlah_bidang' => 'integer',
         'nomor_urut_berkas' => 'integer',
         'revisi_ke' => 'integer',
@@ -203,6 +200,7 @@ class Tiket extends Model
             'alih_media_suel' => 'indigo',
             'selesai' => 'success',
             'dikembalikan' => 'danger',
+            'perbaikan' => 'warning',
             'batal' => 'danger',
             default => 'light',
         };
@@ -220,6 +218,7 @@ class Tiket extends Model
             'alih_media_suel' => 'Alih Media Pra-Surat Ukur El.',
             'selesai' => 'Selesai (Sertifikat El. Terbit)',
             'dikembalikan' => 'Dikembalikan (Perlu Perbaikan)',
+            'perbaikan' => 'Perbaikan (Dalam Proses Revisi)',
             'batal' => 'Dibatalkan',
             default => ucfirst($this->status),
         };

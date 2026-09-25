@@ -56,7 +56,7 @@ class ValidatorBtelController extends StageWorkflow
             'kesesuaian_nama' => 'nullable|in:sesuai,tidak_sesuai',
             'kesesuaian_luas' => 'nullable|in:sesuai,tidak_sesuai',
             'kesesuaian_nib' => 'nullable|in:sesuai,tidak_sesuai',
-            'status_validasi' => 'required|in:proses,lulus,perlu_koreksi,ditolak',
+            'status_validasi' => 'required|in:lulus,ditolak',
             'catatan' => 'nullable|string',
         ]);
 
@@ -81,7 +81,7 @@ class ValidatorBtelController extends StageWorkflow
     {
         $penugasan = $tiket->penugasanAktif($this->stageName());
         if (! $penugasan || $penugasan->user_id !== Auth::id()) {
-            abort(403, 'Tiket tidak sedang dalam antrian pekerjaan Anda.');
+            abort(403, 'Berkas tidak sedang dalam antrian pekerjaan Anda.');
         }
     }
 }

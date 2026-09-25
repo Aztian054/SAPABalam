@@ -52,7 +52,7 @@ class AlihMediaBtelController extends StageWorkflow
         $tiket = Tiket::findOrFail($id);
         $penugasan = $tiket->penugasanAktif($this->stageName());
         if (! $penugasan || $penugasan->user_id !== Auth::id()) {
-            return back()->with('error', 'Tiket tidak sedang dalam antrian Anda.');
+            return back()->with('error', 'Berkas tidak sedang dalam antrian Anda.');
         }
 
         $request->validate([

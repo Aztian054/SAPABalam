@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk — Sistem Loket Pertanahan Elektronik BMN BALAM</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('asset/images/logobpn2026.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -39,6 +40,7 @@
             background: #b0810f;
             color: #fff;
         }
+        .logo-sm { width: 56px; height: 56px; }
     </style>
 </head>
 <body>
@@ -48,9 +50,7 @@
     <div class="col-lg-5 p-4 p-md-5 d-flex flex-column justify-content-between text-white" style="background: linear-gradient(180deg, #07192c 0%, #0c2b4d 100%);">
         <div>
             <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="bg-warning text-dark p-2 rounded-3">
-                    <i class="bi bi-building-fill-check fs-2"></i>
-                </div>
+                <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo BPN" class="rounded-circle bg-white object-fit-contain p-1 shadow logo-sm">
                 <div>
                     <h5 class="fw-bold mb-0">LOKET 2026</h5>
                     <small class="text-white-50">Kantah Kota Bandar Lampung</small>

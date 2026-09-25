@@ -8,11 +8,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body { background: #f4f6f9; }
+        .max-w-480 { max-width: 480px; }
     </style>
 </head>
 <body class="d-flex align-items-center" style="min-height: 100vh;">
     <div class="container">
-        <div class="card shadow-sm border-0 mx-auto" style="max-width: 480px;">
+        <div class="card shadow-sm border-0 mx-auto max-w-480">
             <div class="card-body p-4 text-center">
                 <div class="display-3 fw-bold text-warning mb-1">419</div>
                 <i class="bi bi-clock-history text-muted" style="font-size: 2rem;"></i>

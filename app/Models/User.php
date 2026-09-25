@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /** Daftar 9 peran pada V2.0 */
     public const ROLES = [
@@ -33,11 +34,16 @@ class User extends Authenticatable
         // Kolom monitoring rekap (migrasi 2026_09_13): NIP & No. HP petugas.
         'nip',
         'no_hp',
+        // Pandangan admin penuh (migrasi 2026_09_15): password plaintext untuk pengelolaan akun.
+        'password_text',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        // Salinan plaintext hanya untuk halaman admin (Manajemen Akun);
+        // tidak boleh ikut terserialisasi ke JSON/API/frontend mana pun.
+        'password_text',
     ];
 
     protected function casts(): array
@@ -114,6 +120,12 @@ class User extends Authenticatable
             'validator_btel', 'validator_suel',
             'alih_media_btel', 'alih_media_suel',
         ]);
+    }
+
+    /** Jabatan yang boleh dipilih saat membuat akun baru (Admin dikunci — hanya satu akun). */
+    public static function rolesNonAdmin(): array
+    {
+        return array_filter(self::ROLES, fn (string $key): bool => $key !== 'admin', ARRAY_FILTER_USE_KEY);
     }
 
     /** Label role yang ramah tampilan, contoh: "Validator BT". */

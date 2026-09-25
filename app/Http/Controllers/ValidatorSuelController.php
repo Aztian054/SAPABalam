@@ -52,14 +52,14 @@ class ValidatorSuelController extends StageWorkflow
         $tiket = Tiket::findOrFail($id);
         $penugasan = $tiket->penugasanAktif($this->stageName());
         if (! $penugasan || $penugasan->user_id !== Auth::id()) {
-            return back()->with('error', 'Tiket tidak sedang dalam antrian Anda.');
+            return back()->with('error', 'Berkas tidak sedang dalam antrian Anda.');
         }
 
         $request->validate([
             'kesesuaian_nama' => 'nullable|in:sesuai,tidak_sesuai',
             'kesesuaian_luas' => 'nullable|in:sesuai,tidak_sesuai',
             'cocok_letak' => 'nullable|in:sesuai,tidak_sesuai',
-            'status_validasi' => 'required|in:proses,lulus,perlu_koreksi,ditolak',
+            'status_validasi' => 'required|in:lulus,ditolak',
             'catatan' => 'nullable|string',
         ]);
 

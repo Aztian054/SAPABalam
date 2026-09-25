@@ -17,6 +17,8 @@
    ```
 
 3. Buka aplikasi di browser, mis. `http://loket2026.test` atau `http://localhost:8000`.
+4. **Rate-limit login:** `POST /login` dibatasi `throttle:6,1` — maks. **6 percobaan per menit**. Setelah 6× gagal dalam satu menit, sistem menolak sementara (HTTP 429). Jika terjebak, tunggu 1 menit lalu ulangi.
+5. **Kolom login** menerima **username ATAU email**; akun wajib aktif (`is_active = true`).
 
 ### Akun yang dipakai demo ini (semua aktif)
 

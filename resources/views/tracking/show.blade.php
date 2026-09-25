@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Status Berkas {{ $tiket->kode_tiket }} — Kantah Bandar Lampung</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('asset/images/logobpn2026.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -33,24 +34,28 @@
             display: inline-flex; align-items: center; justify-content: center;
             margin-bottom: 0.5rem; font-weight: bold;
         }
+        .logo-sm { width: 56px; height: 56px; }
+        .max-w-600 { max-width: 600px; }
+        .max-w-900 { max-width: 900px; }
+        .td-label { width: 120px; }
     </style>
 </head>
 <body>
 
     <div class="hero-banner">
         <div class="container">
-            <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
-                <i class="bi bi-building-fill-check fs-2 text-warning"></i>
+            <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+                <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo BPN" class="rounded-circle bg-white object-fit-contain p-1 shadow logo-sm">
                 <h5 class="mb-0 fw-bold">Kantor Pertanahan Kota Bandar Lampung</h5>
             </div>
             <h2 class="fw-bold mb-2">Detail Status Berkas</h2>
-            <p class="text-white-50 mb-0" style="max-width: 600px; margin: 0 auto;">
+            <p class="text-white-50 mb-0 max-w-600 mx-auto">
                 Link pelacakan permanen dari loket. Status diperbarui otomatis setiap ada perpindahan tahap.
             </p>
         </div>
     </div>
 
-    <div class="container py-4" style="max-width: 900px;">
+    <div class="container py-4 max-w-900">
         <div class="card card-custom p-4 mb-4 border-top border-4 border-primary result-card">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-3 border-bottom gap-2">
                 <div>
@@ -144,18 +149,15 @@
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3 h-100">
                         <h6 class="fw-bold text-dark mb-2"><i class="bi bi-person-fill text-primary"></i> Data Pemohon</h6>
+                        <div class="table-responsive">
                         <table class="table table-sm table-borderless small mb-0">
                             <tr>
-                                <td class="text-muted" style="width: 120px;">Nama Pemohon</td>
+                                <td class="text-muted td-label">Nama Pemohon</td>
                                 <td class="fw-bold">: {{ $tiket->nama_pemohon }}</td>
                             </tr>
                             <tr>
                                 <td class="text-muted">NIK</td>
                                 <td>: {{ $tiket->nik_pemohon ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Instansi / Satker</td>
-                                <td>: {{ $tiket->satuan_kerja ?? 'Perorangan' }}</td>
                             </tr>
                             <tr>
                                 <td class="text-muted">Tgl. Masuk</td>
@@ -166,15 +168,17 @@
                                 <td>: {{ $tiket->no_hp_pemohon }}</td>
                             </tr>
                         </table>
+                        </div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3 h-100">
                         <h6 class="fw-bold text-dark mb-2"><i class="bi bi-briefcase-fill text-warning"></i> Layanan Pertanahan</h6>
+                        <div class="table-responsive">
                         <table class="table table-sm table-borderless small mb-0">
                             <tr>
-                                <td class="text-muted" style="width: 120px;">Jenis Layanan</td>
+                                <td class="text-muted td-label">Jenis Layanan</td>
                                 <td class="fw-bold">: {{ $tiket->jenisPermohonan->nama }}</td>
                             </tr>
                             <tr>
@@ -189,11 +193,8 @@
                                 <td class="text-muted">Jumlah Bidang</td>
                                 <td>: {{ $tiket->jumlah_bidang }}</td>
                             </tr>
-                            <tr>
-                                <td class="text-muted">Target SLA</td>
-                                <td>: {{ $tiket->tanggal_target_selesai?->format('d F Y') ?? '-' }}</td>
-                            </tr>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

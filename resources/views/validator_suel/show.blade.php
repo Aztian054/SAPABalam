@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Validator SU — Detail Tiket')
+@section('title', 'Validator SU — Detail Berkas')
 
 @section('content')
     <div class="d-flex align-items-center gap-2 mb-3">
-        <h4 class="fw-bold text-dark mb-0">Detail Tiket {{ $tiket->kode_tiket }}</h4>
+        <h4 class="fw-bold text-dark mb-0">Detail Berkas {{ $tiket->kode_tiket }}</h4>
     </div>
 
     @include('partials.tiket_header')
@@ -50,25 +50,27 @@
                         <div class="col-md-6">
                             <label class="form-label">Status Validasi <span class="text-danger">*</span></label>
                             <select name="status_validasi" class="form-select" required>
-                                <option value="proses" {{ ($lembar->status_validasi ?? 'proses') === 'proses' ? 'selected' : '' }}>Proses</option>
-                                <option value="lulus" {{ ($lembar->status_validasi ?? '') === 'lulus' ? 'selected' : '' }}>LULUS</option>
-                                <option value="perlu_koreksi" {{ ($lembar->status_validasi ?? '') === 'perlu_koreksi' ? 'selected' : '' }}>Perlu Koreksi</option>
-                                <option value="ditolak" {{ ($lembar->status_validasi ?? '') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                @php $sv = ($lembar->status_validasi ?? ''); @endphp
+                                @if(! in_array($sv, ['lulus', 'ditolak'], true))
+                                    <option value="{{ $sv }}" selected>{{ ucwords($sv) }} (disimpan)</option>
+                                @endif
+                                <option value="lulus" {{ $sv === 'lulus' ? 'selected' : '' }}>LULUS</option>
+                                <option value="ditolak" {{ $sv === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                             </select>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Catatan Validasi</label>
-                            <textarea name="catatan" rows="3" class="form-control">{{ $lembar->catatan ?? '' }}</textarea>
+                            <textarea name="catatan" id="catatan" rows="3" class="form-control">{{ $lembar->catatan ?? '' }}</textarea>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan Hasil Validasi SU</button>
+                        <button class="btn btn-gold"><i class="bi bi-save me-1"></i>Simpan Hasil Validasi SU</button>
                     </div>
                 </form>
             </div>
         </div>
     @elseif($isActive && !$mine)
-        <div class="alert alert-warning"><i class="bi bi-person-lock me-1"></i>Tiket ini sedang diproses akun lain pada tahap Validator SU.</div>
+        <div class="alert alert-warning"><i class="bi bi-person-lock me-1"></i>Berkas ini sedang diproses akun lain pada tahap Validator SU.</div>
     @endif
 
     @include('partials.timeline')

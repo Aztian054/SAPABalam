@@ -1,12 +1,12 @@
 # PRD — Sistem Loket Pelayanan Pertanahan Elektronik
 ## Kantor Pertanahan Kota Bandar Lampung (BALAM)
 
-**Versi:** 2.2 — FINAL (Alur Paralel)
-**Tanggal:** 13 September 2026
-**Status:** Evaluasi Alur Final — 9 Role / 8 Stage — Konfigurasi Alur Paralel (Verifikator ║ Warkah; Validator via `diserahkan_ke_validator`; Alih Media gate AND penuh)
+**Versi:** 2.3 — FINAL (Alur Paralel + Kesesuaian Website Riil)
+**Tanggal:** 15 September 2026
+**Status:** Evaluasi Alur Final — 9 Role / 8 Stage — Konfigurasi Alur Paralel (Verifikator ║ Warkah; Validator via `diserahkan_ke_validator`; Alih Media gate AND penuh) + diselaraskan dengan perilaku website LOKET 2026 saat ini (login username/email + rate-limit, dashboard 6 bulan, laporan semua role)
 **Platform Target:** Laravel 13 + MySQL (via PHPMyAdmin/Laragon)
-**Project:** LOKET2026 → `http://localhost:8000`
-**Basis Dokumen:** `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` · `PETUNJUK TEKNIS.docx` · Excel `Project Loket/02-05`
+**Project:** LOKET2026 → `http://localhost:8000` (React SPA juga tersedia di `/app`)
+**Basis Dokumen:** `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` (v2.3) · `PETUNJUK TEKNIS.docx` · Excel `Project Loket/02-05` · `routes/web.php` + controller/view aktual
 
 ---
 
@@ -53,7 +53,9 @@ Kantor Pertanahan Kota Bandar Lampung mengelola permohonan pelayanan pertanahan 
 | E | **Print** tersedia di Detail tiket yang sudah selesai, di akun penanggung jawab masing-masing. |
 | F | **Jalur Paralel** — Verifikator ║ Warkah dan Validator BT ║ SU berjalan paralel; aksi dibuka mengikuti gate status (`diserahkan_ke_validator`, semua tahap selesai). |
 | G | **Nomor Tiket Manual** — diisi akun Loket, **format bebas** (bukan auto-generate). |
-| H | **Banyak Akun per Jabatan** — setiap jabatan boleh memiliki banyak akun. |
+| H | **Banyak Akun per Jabatan** — setiap jabatan boleh memiliki banyak akun (seeder: 2 akun per jabatan). |
+| I | **Login Identitas Ganda + Rate Limit** — login menerima username **atau email**; akun harus aktif; maksimal 6 percobaan per menit. |
+| J | **Dashboard & Laporan Universal** — Dashboard (grafik 6 bulan) dan Laporan & Rekap SLA (`index/print/export/print-rapi`) tersedia di semua 9 role. |
 
 ---
 
@@ -61,7 +63,7 @@ Kantor Pertanahan Kota Bandar Lampung mengelola permohonan pelayanan pertanahan 
 
 1. **Digitalisasi** alur permohonan Loket → (Verifikator ║ Warkah) → Validator (BT & SU, mulai via `diserahkan_ke_validator`) → Alih Media (BT & SU, hanya jika semua tahap selesai) → Selesai dalam satu platform web terpusat.
 2. **Mempertahankan** semua konsep & terminologi yang sudah dipahami staf (kode tiket, lembar kerja, form perbaikan, dll).
-3. **Meningkatkan** efisiensi dengan otomasi: smart search, generate tiket, tracking status otomatis, cetak formulir.
+3. **Meningkatkan** efisiensi dengan otomasi: smart search, nomor tiket manual (format bebas sesuai kebiasaan kantor — bukan auto-generate), tracking status otomatis, cetak formulir & tanda terima.
 4. **Memberikan** privasi data: setiap akun hanya melihat tiket yang menjadi penanggung jawabnya.
 5. **Memberikan** visibilitas real-time kepada pimpinan melalui dashboard monitoring.
 
@@ -77,6 +79,11 @@ Kantor Pertanahan Kota Bandar Lampung mengelola permohonan pelayanan pertanahan 
 - Cetak: tanda terima, **form perbaikan**, monitoring, laporan
 - Portal Tracking Publik (tanpa login)
 - Export Excel (`.xls`)/PDF laporan — tersedia di semua akun
+- **Laporan & Rekap SLA** di semua 9 role: `index` / `print` / `export` (`.xls`) / **`print-rapi`** (`/reports*`)
+- Login dengan **username ATAU email** + **rate limit 6 percobaan/menit** (`throttle:6,1`); akun non-aktif ditolak
+- Dashboard dengan **grafik tiket masuk 6 bulan terakhir** + statistik & overdue per stage
+- Tracking publik by **nomor tiket atau nomor telepon**
+- Arsip **massal** dari menu Tiket Selesai; akun bisa di-**toggle** aktif/nonaktif oleh Admin
 - Multi-role authentication (9 role)
 - Privasi: tiket hanya terlihat oleh penanggung jawabnya
 - Arsip folder (Admin): Buat Folder → Tambahkan Tiket Selesai
@@ -131,11 +138,12 @@ ALIH MEDIA Pra-SuEl (Stage 5B):
 └── Alih Media SU
 ```
 
-> Menu **Dashboard**, **Portal Tracking Publik**, dan **Laporan & Rekap SLA** tersedia di semua akun. Seksi **Daftar / Revisi / Selesai** tersaji dalam halaman stage masing-masing.
+> Menu **Dashboard**, **Portal Tracking Publik**, dan **Laporan & Rekap SLA** tersedia di semua 9 role. **Laporan & Rekap SLA** mencakup halaman indeks, **Print**, **Export Excel** (`.xls`), dan **Print Rapi** (`/reports`, `/reports/print`, `/reports/export`, `/reports/print-rapi`). Dashboard menampilkan kartu statistik + **grafik 6 bulan terakhir** + overdue per stage. Seksi **Daftar / Revisi / Selesai** tersaji dalam halaman stage masing-masing.
 
 ### Aturan Akses
 
-- **Admin**: Full access semua tiket + CRUD akun + arsip + export.
+- **Login**: menerima **username ATAU email**; akun wajib **aktif** (`is_active = true`); route `POST /login` di-rate-limit **6 percobaan/menit** (`throttle:6,1`).
+- **Admin**: lihat semua tiket, detail, tambah tiket, arsip (single/massal), kelola akun (tambah, ubah jabatan, **toggle aktif/nonaktif**) + export. **Admin TIDAK memiliki tombol Edit/Hapus tiket** (route-nya tidak tersedia).
 - **Pemimpin**: Tampilan sama seperti Admin, semua tombol aksi / form input dikunci; menu "Manajemen Akun" tidak ditampilkan.
 - **Semua akun stage**: Hanya melihat tiket milik sendiri (yang sudah di-Add dari DB Admin).
 - **Banyak akun per jabatan**: setiap jabatan boleh memiliki banyak akun; **Admin dapat mengubah jabatan akun kapan saja (perubahan berlaku real-time)**.
@@ -522,21 +530,23 @@ Custom SpreadsheetMlBuilder (SpreadsheetML 2003, format .xls)
 
 ---
 
-## 10. Data Seeder Default
+## 10. Data Seeder Default (2 Akun per Jabatan)
 
-| # | Username | Password | Role | Keterangan |
+Seeder `database/seeders/UserSeeder.php` menyediakan **17 akun aktif**: 1 admin + **2 akun per jabatan** (non-admin). Kolom login menerima **username atau email**.
+
+| Jabatan (Role) | Username #1 | Username #2 | Password | Email contoh |
 |---|---|---|---|---|
-| 1 | admin | admin123 | admin | Akun admin permanen — akses penuh |
-| 2 | pemimpin | pemimpin123 | pemimpin | View-only monitoring (aksi terkunci) |
-| 3 | loket1 | loket123 | loket | Petugas loket #1 |
-| 4 | verifikator1 | verif123 | verifikator | Petugas verifikator #1 |
-| 5 | warkah1 | warkah123 | warkah | Petugas warkah #1 |
-| 6 | vbtel1 | vbtel123 | validator_btel | Validator Buku Tanah #1 |
-| 7 | vsuel1 | vsuel123 | validator_suel | Validator Surat Ukur #1 |
-| 8 | ambt1 | ambt123 | alih_media_btel | Alih Media BT #1 |
-| 9 | amsu1 | amsu123 | alih_media_suel | Alih Media SU #1 |
+| `admin` (🔴) | `admin` | — | `admin123` | admin@loket.balam.go.id |
+| `pemimpin` (🟡) | `pemimpin` | `pemimpin2` | `pemimpin123` | pemimpin@loket.balam.go.id |
+| `loket` (🟠) | `loket1` | `loket2` | `loket123` | loket@loket.balam.go.id |
+| `verifikator` (🔵) | `verifikator1` | `verifikator2` | `verif123` | verifikator@loket.balam.go.id |
+| `warkah` (🟣) | `warkah1` | `warkah2` | `warkah123` | warkah@loket.balam.go.id |
+| `validator_btel` (🟢) | `vbtel1` | `vbtel2` | `vbtel123` | vbtel1@loket.balam.go.id |
+| `validator_suel` (🟢) | `vsuel1` | `vsuel2` | `vsuel123` | vsuel1@loket.balam.go.id |
+| `alih_media_btel` (⚫) | `ambt1` | `ambt2` | `ambt123` | ambt1@loket.balam.go.id |
+| `alih_media_suel` (⚫) | `amsu1` | `amsu2` | `amsu123` | amsu1@loket.balam.go.id |
 
-> Tabel di atas adalah **contoh bootstrap 1 akun per jabatan**. Pada operasional, setiap jabatan boleh memiliki **banyak akun** (dikelola Admin melalui Manajemen Akun).
+> **Banyak akun per jabatan.** Pada operasional, setiap jabatan boleh memiliki **lebih banyak akun**; dikelola Admin melalui **Manajemen Akun** (label field **"Jabatan"**). Akun yang dinonaktifkan (`is_active = false`) tidak dapat login.
 
 ---
 
@@ -557,19 +567,45 @@ Custom SpreadsheetMlBuilder (SpreadsheetML 2003, format .xls)
 
 ## 12. Kriteria Keberhasilan
 
-- [ ] Admin: Login → Daftar Tiket (Database) → Tambah Tiket → Revisi → Selesai → Arsip → Manajemen Akun → Export.
-- [ ] Pemimpin: Login → tampilan sama Admin → semua aksi terkunci → monitoring + print monitoring.
-- [ ] Loket: Login → registrasi tiket (nomor tiket manual, format bebas) → tiket berstatus `diterima` masuk DB Admin → terima revisi → re-submit.
+- [ ] Login: menerima **username/email** + rate-limit 6×/menit; akun non-aktif ditolak; redirect ke `/dashboard`.
+- [ ] Admin: Login → Daftar Tiket (Database) → Tambah Tiket → Revisi (lihat + hapus) → Selesai → Arsip (single/massal) → Manajemen Akun (tambah, ubah jabatan, toggle) → Export.
+- [ ] Pemimpin: Login → tampilan serupa Admin → semua aksi terkunci → monitoring + print monitoring.
+- [ ] Loket: Login → registrasi tiket (nomor tiket manual, format bebas) → tiket berstatus `diterima` masuk DB Admin → terima revisi → re-submit (P0→P1→…).
 - [ ] Verifikator: Login → smart search di DB Admin → Add → verifikasi → Lengkap (paralel dgn Warkah); Perbaikan → kembali ke Loket.
 - [ ] Warkah: Login → smart search di DB Admin → Add → siapkan data pendukung BT & SU → status PROSES/DISERAHKAN + `diserahkan_ke_validator` → selesai (tanpa menunggu Verifikator).
 - [ ] Validator BTEL/SUEL: Login → smart search (hanya tiket `diserahkan_ke_validator`) → Add → validasi data BT/SU → selesai — urutan bebas tanpa menunggu Verifikator; keduanya harus selesai sebelum lanjut.
 - [ ] Alih Media BTEL/SUEL: Login → smart search → Add → tombol aksi **terkunci sampai SEMUA tahap selesai** (verifikasi, warkah, validasi BT & SU) → scan/upload/ttd/cetak tim → selesai.
-- [ ] Revisi: kode pembetulan P1..Pn tak terbatas; tiket bisa dikembalikan ke tahap sebelumnya dengan catatan.
-- [ ] Export Excel/PDF laporan berfungsi (`/reports/export`, `/reports/print`).
-- [ ] Arsip folder berfungsi (buat folder → tambahkan tiket selesai → hilang dari menu Selesai).
+- [ ] Revisi: kode pembetulan P1..Pn tak terbatas; tiket bisa dikembalikan ke tahap sebelumnya dengan catatan (eksternal via Loket menaikkan P-kode; internal hanya `revisi_ke`).
+- [ ] Dashboard: kartu statistik + **grafik 6 bulan** + overdue per stage + tiket/aktivitas terbaru (semua role).
+- [ ] Laporan & Rekap SLA semua role: `/reports`, `/reports/print`, `/reports/export` (`.xls`), `/reports/print-rapi`.
+- [ ] Tracking publik: cari by **nomor tiket ATAU nomor telepon**; detail + riwayat perjalanan berkas.
+- [ ] Arsip folder berfungsi (buat folder → tambahkan tiket selesai **single/massal** → hilang dari menu Selesai).
 - [ ] Cetak Form Perbaikan tersedia di seluruh 6 group stage (Verifikator, Warkah, Validator BT, Validator SU, Alih Media BT, Alih Media SU).
+- [ ] Admin **tanpa** tombol Edit/Hapus tiket (konsisten route); hapus hanya untuk entri revisi.
+
+---
+
+## 13. Kesesuaian Website Riil (Verifikasi 15 September 2026)
+
+Cek silang klaim dokumen lama terhadap perilaku aplikasi saat ini (`routes/web.php`, controller, view, seeder):
+
+| Aspek | Versi dokumen lama | Website LOKET 2026 saat ini |
+|---|---|---|
+| Nomor tiket | Auto-generate | **Manual, format bebas** (diisi akun Loket) |
+| Verifikator ║ Warkah | Seri (Verifikator → Warkah) | **Paralel** sejak tiket ada di DB Admin |
+| Validator BT/SU | Setelah Verifikator & Warkah berurutan selesai | Mulai saat Warkah menandai `diserahkan_ke_validator`; **tidak menunggu Verifikator** |
+| Alih Media | Terkunci sampai kedua Validator selesai | Terkunci sampai **SEMUA tahap selesai** (gate AND penuh) |
+| Jumlah akun per jabatan | 1 akun | **2 akun per jabatan di seeder** (17 akun), bisa lebih via Manajemen Akun |
+| Admin meng-edit/menghapus tiket | Klaim lama: bisa | **TIDAK** — hanya lihat/detail/tambah/arsip; hapus hanya entri revisi |
+| Login | Username | **Username ATAU email** + `is_active = true` + **rate-limit 6×/menit** |
+| Dashboard | — | Kartu statistik + **grafik 6 bulan** + tiket/aktivitas terbaru + overdue per stage |
+| Laporan | — | `/reports` index, `print`, `export`, **`print-rapi`** untuk **semua 9 role** |
+| Tracking publik | Nomor tiket | **Nomor tiket ATAU nomor telepon** (query `q`) |
+| Arsip | Single | **Single + massal** (`/admin/selesai/arsipkan-massal`) |
+| Kelola akun | CRUD | Tambah, ubah jabatan (**label "Jabatan"**), **toggle aktif/nonaktif** (`/admin/users/{id}/toggle`) |
+| SPA | — | **React SPA** di `/app/{any?}` (fallback halaman migrasi) |
 
 ---
 
 *Dokumen ini diselaraskan dengan `ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL).docx` (EVALUASI ALUR FINAL — 9 ROLE / 8 STAGE) Kantor Pertanahan Kota Bandar Lampung.*
-*Versi 2.2 — 13 September 2026 — Konfigurasi Alur Paralel: Loket → (Verifikator ║ Warkah) → (Validator BT & SU, mulai via `diserahkan_ke_validator`) → (Alih Media BT & SU, gate AND penuh semua tahap) → Selesai. Nomor tiket manual (format bebas); banyak akun per jabatan.*
+*Versi 2.3 — 15 September 2026 — Konfigurasi Alur Paralel: Loket → (Verifikator ║ Warkah) → (Validator BT & SU, mulai via `diserahkan_ke_validator`) → (Alih Media BT & SU, gate AND penuh semua tahap) → Selesai. Nomor tiket manual (format bebas); banyak akun per jabatan (2 akun di seeder); login username/email + rate-limit 6×/menit; Admin tanpa edit/hapus tiket; Laporan & Rekap SLA di semua role; dashboard grafik 6 bulan.*

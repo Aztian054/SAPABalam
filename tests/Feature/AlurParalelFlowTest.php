@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\BidangTanah;
 use App\Models\JenisPermohonan;
+use App\Models\LembarKerjaWarkah;
 use App\Models\Tiket;
 use App\Models\User;
 use App\Services\TiketFlowService;
@@ -36,7 +37,6 @@ class AlurParalelFlowTest extends TestCase
             'kode' => 'TEST',
             'nama' => 'Permohonan Uji Alur',
             'kategori' => 'umum',
-            'batas_hari_sla' => 7,
             'is_active' => true,
         ]);
 
@@ -85,9 +85,8 @@ class AlurParalelFlowTest extends TestCase
         $tiket = $this->tiket();
         $flow = app(TiketFlowService::class);
 
-        // Warkah sudah selesai mengerjakan tetapi BELUM menandai DISERAHKAN.
+        // Warkah sudah meng-Add tetapi BELUM menandai DISERAHKAN (tombol Kirim).
         $flow->claim($warkah, $tiket);
-        $flow->done($warkah, $tiket, 'data warkah lengkap');
 
         $this->expectException(\RuntimeException::class);
         $flow->claim($validator, $tiket);
@@ -110,7 +109,7 @@ class AlurParalelFlowTest extends TestCase
         $this->assertNotNull($tiket->penugasanAktif('validasi_suel'));
     }
 
-    public function test_alih_media_diblokir_sampai_semua_tahap_selesai(): void
+    public function test_alih_media_diblokir_sampai_verifikasi_dan_validator_selesai_dan_berkas_dikirim(): void
     {
         $alihBtel = $this->user('alih_media_btel');
         $tiket = $this->tiket();
@@ -122,7 +121,7 @@ class AlurParalelFlowTest extends TestCase
         $flow->claim($alihBtel, $tiket);
     }
 
-    public function test_alih_media_terbuka_setelah_semua_tahap_selesai_dan_berujung_status_selesai(): void
+    public function test_alih_media_terbuka_setelah_kirim_berkas_dan_berujung_status_selesai_setelah_pengembalian(): void
     {
         $verifikator = $this->user('verifikator');
         $warkah = $this->user('warkah');
@@ -133,13 +132,16 @@ class AlurParalelFlowTest extends TestCase
         $tiket = $this->tiket();
         $flow = app(TiketFlowService::class);
 
+        // Warkah meng-Add dan KIRIM berkas (DIPINJAM) — tanpa perlu "selesai".
+        $flow->claim($warkah, $tiket);
         $tiket->update(['diserahkan_ke_validator' => true]);
+        LembarKerjaWarkah::updateOrCreate(
+            ['tiket_id' => $tiket->id],
+            ['status_pengembalian' => 'dipinjam', 'tanggal_diserahkan' => now()->toDateString()]
+        );
 
         $flow->claim($verifikator, $tiket);
         $flow->done($verifikator, $tiket);
-
-        $flow->claim($warkah, $tiket);
-        $flow->done($warkah, $tiket);
 
         $flow->claim($validatorBtel, $tiket);
         $flow->done($validatorBtel, $tiket);
@@ -147,8 +149,7 @@ class AlurParalelFlowTest extends TestCase
         $flow->claim($validatorSuel, $tiket);
         $flow->done($validatorSuel, $tiket);
 
-        $this->assertTrue($tiket->isSemuaTahapSelesai());
-
+        // Alih Media terbuka meskipun Warkah belum selesai (berkas sudah KIRIM).
         $flow->claim($alihBtel, $tiket);
         $flow->done($alihBtel, $tiket);
 
@@ -156,7 +157,15 @@ class AlurParalelFlowTest extends TestCase
         $flow->done($alihSuel, $tiket);
 
         $tiket->refresh();
+        $this->assertNotSame('selesai', $tiket->status);
+        $this->assertTrue($tiket->isAlihMediaSelesai());
 
+        // Warkah mencatat pengembalian lalu Proses Selesai → SELESAI.
+        LembarKerjaWarkah::where('tiket_id', $tiket->id)
+            ->update(['status_pengembalian' => 'dikembalikan', 'tanggal_kembali' => now()->toDateString()]);
+        $flow->done($warkah, $tiket, 'Berkas BT/SU dikembalikan ke Warkah.');
+
+        $tiket->refresh();
         $this->assertSame('selesai', $tiket->status);
         $this->assertTrue($tiket->isAlihMediaSelesai());
     }

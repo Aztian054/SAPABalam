@@ -1,31 +1,32 @@
 # LOKET 2026 — Sistem Loket Pelayanan Pertanahan Elektronik
 
-Aplikasi web digitalisasi alur permohonan pelayanan pertanahan untuk **Kantor Pertanahan Kota Bandar Lampung (BALAM)**. Menggantikan pengelolaan 6 file Excel/Google Sheets terpisah dengan satu basis data terpusat, autentikasi 9 role, alur kerja 8 stage paralel, cetak formulir, tracking publik, dan arsip digital.
+Aplikasi web digitalisasi alur permohonan pelayanan pertanahan untuk **Kantor Pertanahan Kota Bandar Lampung (BALAM)**. Menggantikan pengelolaan 6 file Excel/Google Sheets terpisah dengan satu basis data terpusat, autentikasi 9 role, alur kerja stage sekuensial + paralel, cetak formulir, tracking publik, dan arsip digital.
 
-- **Versi:** 2.2 (Alur Paralel — 9 Role / 8 Stage)
-- **Stack:** Laravel 13 · PHP 8.3 · MySQL · Bootstrap 5.3 (CDN)
-- **Basis dokumen:** `Template_Panduan/PRD_LOKET_BMN_BALAM.md`
+- **Versi:** 2.3 (Alur Final — 9 Role / 8 Stage Sekuensial + Paralel)
+- **Stack:** Laravel 13 · PHP 8.3 · MySQL · Blade + Bootstrap 5.3 (CDN)
+- **Basis dokumen:** `Template_Panduan/PRD_LOKET_BMN_BALAM.md` & `ALUR_BARU_2026.md`
 
 ---
 
 ## Alur Sistem
 
 ```
-LOKET ─▶ DB ADMIN ─▶ (VERIFIKATOR ║ WARKAH) ─▶ (VALIDATOR BT ║ VALIDATOR SU)
-      ─▶ (ALIH MEDIA BT ║ ALIH MEDIA SU) ─▶ SELESAI ─▶ ARSIP
+LOKET → DB ADMIN → VERIFIKASI (selesai) → WARKAH (Diserahkan) → (VALIDATOR BT ║ VALIDATOR SU)
+                                ↓
+                          (ALIH MEDIA BT ║ ALIH MEDIA SU) → WARKAH (Dikembalikan) → SELESAI → ARSIP
 ```
 
-| Stage | Role | Keterangan |
-|---|---|---|
-| 1 | `loket` | Registrasi tiket (nomor tiket manual, format bebas) |
-| 2 | `verifikator` | Pemeriksaan kelengkapan berkas — **paralel** dengan Warkah |
-| 3 | `warkah` | Penyiapan data pendukung BT & SU → `diserahkan_ke_validator` |
-| 4A / 4B | `validator_btel` / `validator_suel` | Validasi BT / SU |
-| 5A / 5B | `alih_media_btel` / `alih_media_suel` | Alih media BT / SU (gate AND penuh) |
-| — | `admin` | Basis data terpusat, tambah tiket, revisi, selesai, arsip, kelola akun |
-| — | `pemimpin` | Monitoring read-only (aksi terkunci) |
+| Stage | Role | Alur | Keterangan |
+|---|---|---|---|
+| 1 | `loket` | Input | Registrasi tiket baru (nomor tiket manual, format bebas) |
+| 2 | `verifikator` | Sekuensial | Pemeriksaan kelengkapan berkas — **HARUS SELESAI sebelum Warkah mulai** |
+| 3 | `warkah` | 2 Fase | Fase 1: Penyiapan & penyerahan data BT/SU ke Validator (gate: Verifikasi selesai); Fase 2: Pengembalian berkas fisik setelah Alih Media selesai |
+| 4A / 4B | `validator_btel` / `validator_suel` | Paralel | Validasi Pra-BT / Pra-SU — berjalan paralel (gate: Warkah fase 1 selesai + flag `diserahkan_ke_validator`) |
+| 5A / 5B | `alih_media_btel` / `alih_media_suel` | Paralel | Alih media BT / SU — berjalan paralel (gate AND penuh: semua tahap sebelumnya selesai + berkas diserahkan) |
+| — | `admin` | Dashboard | Basis data terpusat, tambah/revisi/selesai/arsip tiket, kelola akun, laporan |
+| — | `pemimpin` | Monitoring | Monitoring read-only (semua aksi form terkunci), laporan |
 
-Pola universal setiap tahap: **Smart Search → Add → Process → Selesai → Kembali ke DB Admin**.
+Pola universal setiap tahap: **Smart Search → Add (Ambil) → Proses → Selesai → Kembali ke DB Admin**.
 
 ---
 
@@ -89,11 +90,14 @@ php artisan test
 # Hanya demo alur end-to-end via HTTP route asli
 php artisan test --filter=DemoAlurRealtimeTest
 
-# Perbaiki format kode
-vendor/bin/pint --dirty
+# Alur Paralel Flow Test
+php artisan test --filter=AlurParalelFlowTest
+
+# Perbaiki format kode (wajib setelah modifikasi PHP)
+vendor/bin/pint --dirty --format agent
 ```
 
-Suite utama: `DemoAlurRealtimeTest` (5 skenario / 160 asersi) menyimulasikan seluruh perjalanan tiket lewat route HTTP sungguhan, termasuk middleware role dan transisi basis data.
+Suite utama: `DemoAlurRealtimeTest` (5 skenario / 160+ asersi) dan `AlurParalelFlowTest` (8+ asersi) menjalankan alur melalui route HTTP asli, mencakup middleware role, gate antar-tahap, anti-duplikat, dan transisi database.
 
 ---
 
@@ -120,11 +124,12 @@ Template_Panduan/        # PRD, panduan alur per role, laporan demo, akun demo
 
 | Dokumen | Isi |
 |---|---|
-| `Template_Panduan/PRD_LOKET_BMN_BALAM.md` | PRD v2.2 — ruang lingkup, alur, skema, kriteria |
+| `ALUR_BARU_2026.md` | Detail perubahan alur baru 17 September 2026 |
+| `Template_Panduan/PRD_LOKET_BMN_BALAM.md` | PRD v2.3 — ruang lingkup, alur, skema, kriteria |
 | `Template_Panduan/Alur/README.md` | Indeks 12 dokumen panduan alur per role |
 | `Template_Panduan/PANDUAN_DEMO_MANUAL_BROWSER.md` | Langkah demo alur via browser |
 | `Template_Panduan/LAPORAN_DEMO_ALUR_KONDISI_REALTIME.md` | Hasil uji end-to-end + matriks transisi |
 
 ---
 
-*Kantor Pertanahan Kota Bandar Lampung · LOKET 2026 v2.2*
+*Kantor Pertanahan Kota Bandar Lampung · LOKET 2026 v2.3*

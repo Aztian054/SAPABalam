@@ -44,10 +44,6 @@ class ReportController extends Controller
             'total' => Tiket::count(),
             'selesai' => Tiket::where('status', 'selesai')->count(),
             'proses' => Tiket::whereNotIn('status', ['selesai', 'batal'])->count(),
-            'overdue' => Tiket::whereNotIn('status', ['selesai', 'batal'])
-                ->whereNotNull('tanggal_target_selesai')
-                ->whereDate('tanggal_target_selesai', '<', Carbon::today())
-                ->count(),
             'dikembalikan' => Tiket::where('status', 'dikembalikan')->count(),
             'batal' => Tiket::where('status', 'batal')->count(),
         ];
@@ -148,9 +144,9 @@ class ReportController extends Controller
         $tikets = $query->orderByDesc('id')->get();
 
         $headers = [
-            'No', 'Kode Tiket', 'Nama Pemohon', 'NIK', 'Jenis Permohonan', 'Satuan Kerja',
-            'Tanggal Masuk', 'Tanggal Target Selesai', 'Tanggal Selesai', 'Status',
-            'Pembetulan', 'Jumlah Bidang', 'Luas (m²)', 'Kelurahan/Desa', 'Kecamatan',
+            'No', 'Kode Tiket', 'Nama Pemohon', 'NIK', 'Jenis Permohonan',
+            'Tanggal Masuk', 'Tanggal Selesai', 'Status',
+            'Pembetulan', 'Jumlah Bidang', 'Kelurahan/Desa', 'Kecamatan',
             'Petugas Loket', 'Verifikator', 'PIC Warkah', 'Validator BT', 'Validator SU',
             'Alih Media BT', 'Alih Media SU', 'Tgl Verifikasi', 'Tgl Warkah',
             'Tgl Validasi BT', 'Tgl Validasi SU', 'Tgl Alih Media BT', 'Tgl Alih Media SU',
@@ -170,14 +166,11 @@ class ReportController extends Controller
                 $t->nama_pemohon,
                 $t->nik_pemohon ?? '-',
                 $t->jenisPermohonan?->nama ?? '-',
-                $t->satuan_kerja ?? '-',
                 $t->tanggal_masuk?->format('d/m/Y') ?? '-',
-                $t->tanggal_target_selesai?->format('d/m/Y') ?? '-',
                 $t->tanggal_selesai?->format('d/m/Y') ?? '-',
                 $t->status_label,
                 $t->status_pembetulan ?? 'P0',
                 max(1, (int) $t->jumlah_bidang),
-                round($t->bidangTanahs->sum('luas_m2') ?? 0, 2),
                 $t->kelurahan_desa ?? '-',
                 $t->kecamatan ?? '-',
                 $t->nama_petugas_loket ?? '-',

@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Admin — Detail Tiket')
+@section('title', 'Admin — Detail Berkas')
 
 @section('content')
     <div class="d-flex align-items-center gap-2 mb-3">
-        <h4 class="fw-bold text-dark mb-0">Detail Tiket {{ $tiket->kode_tiket }}</h4>
+        <h4 class="fw-bold text-dark mb-0">Detail Berkas {{ $tiket->kode_tiket }}</h4>
         @if($tiket->status === 'selesai')
             <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Selesai</span>
         @endif
@@ -35,7 +35,7 @@
                             <td><small class="text-muted">{{ $p->catatan ?? '-' }}</small></td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-4">Belum ada penugasan, tiket masih menunggu di-Add dari DB Admin.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">Belum ada penugasan, berkas masih menunggu di-Add dari DB Admin.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -93,7 +93,7 @@
                     <div class="col-md-3"><input name="nama_arsip" class="form-control" placeholder="Nama arsip" required></div>
                     <div class="col-md-2"><input name="tipe" class="form-control" placeholder="Tipe dokumen"></div>
                     <div class="col-md-2"><input name="keterangan" class="form-control" placeholder="Keterangan"></div>
-                    <div class="col-auto"><button class="btn btn-primary"><i class="bi bi-archive me-1"></i>Arsipkan</button></div>
+                    <div class="col-auto"><button class="btn btn-gold"><i class="bi bi-archive me-1"></i>Arsipkan</button></div>
                 </form>
             </div>
         </div>

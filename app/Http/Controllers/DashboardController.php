@@ -22,10 +22,6 @@ class DashboardController extends Controller
         $tiketHariIni = Tiket::whereDate('tanggal_masuk', $today)->count();
         $tiketSelesai = Tiket::where('status', 'selesai')->count();
         $tiketDikembalikan = Tiket::where('status', 'dikembalikan')->count();
-        $overdueCount = Tiket::whereNotIn('status', ['selesai', 'batal'])
-            ->whereNotNull('tanggal_target_selesai')
-            ->whereDate('tanggal_target_selesai', '<', $today)
-            ->count();
 
         $stageCounts = [
             'diterima' => Tiket::where('status', 'diterima')->count(),
@@ -72,19 +68,10 @@ class DashboardController extends Controller
             ];
         }
 
-        // Overdue breakdown by stage
-        $overdueByStage = [];
-        foreach (Tiket::STAGES as $stageKey => $stageLabel) {
-            $overdueByStage[$stageKey] = Tiket::where('status', $stageKey)
-                ->whereNotNull('tanggal_target_selesai')
-                ->whereDate('tanggal_target_selesai', '<', $today)
-                ->count();
-        }
-
         return view('dashboard.index', compact(
-            'totalTiket', 'tiketHariIni', 'tiketSelesai', 'tiketDikembalikan', 'overdueCount',
+            'totalTiket', 'tiketHariIni', 'tiketSelesai', 'tiketDikembalikan',
             'stageCounts', 'recentTikets', 'recentActivities', 'roles', 'user',
-            'monthlyData', 'overdueByStage'
+            'monthlyData'
         ));
     }
 }
