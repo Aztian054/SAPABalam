@@ -5,6 +5,7 @@ use App\Http\Controllers\AlihMediaBtelController;
 use App\Http\Controllers\AlihMediaSuelController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailNotificationController;
 use App\Http\Controllers\FormPendaftaranController;
 use App\Http\Controllers\LoketController;
 use App\Http\Controllers\PemimpinController;
@@ -43,6 +44,12 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard Blade penuh (di-revert dari konsolidasi React SPA — menu SPA belum siap).
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ── Notifikasi Email (kirim ulang revisi ke pemohon) ──
+    // Dapat diakses seluruh petugas yang bertanggung jawab yang melihat detail tiket.
+    Route::post('/tikets/{id}/kirim-notifikasi-revisi', [EmailNotificationController::class, 'kirimUlangRevisi'])
+        ->name('tikets.kirim_notifikasi_revisi');
     // ── Admin: DB Tiket Terpadu, User, Arsip ──
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('index');

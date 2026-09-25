@@ -23,7 +23,7 @@ class Tiket extends Model
     protected $fillable = [
         'kode_tiket', 'nomor_antrian', 'nomor_urut_berkas', 'status_pembetulan',
         'tanggal_masuk', 'jenis_permohonan_id', 'nama_pemohon', 'nik_pemohon',
-        'no_hp_pemohon', 'no_hak_sekarang', 'no_hak_sebelumnya',
+        'no_hp_pemohon', 'email_pemohon', 'no_hak_sekarang', 'no_hak_sebelumnya',
         'kelurahan_desa', 'kecamatan', 'jumlah_bidang', 'petugas_loket_id',
         'nama_petugas_loket', 'nomor_telepon', 'nomor_tiket_ppat',
         'nomor_tiket_non_ppat', 'status_pra_btel', 'status_pra_suel',

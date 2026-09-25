@@ -45,6 +45,20 @@
                 <div class="d-flex justify-content-between border-bottom py-1">
                     <small class="text-muted">No. HP</small><strong class="text-dark">{{ $tiket->no_hp_pemohon }}</strong>
                 </div>
+                <div class="d-flex justify-content-between border-bottom py-1">
+                    <small class="text-muted">Email Pemohon</small>
+                    <strong class="text-dark">
+                        {{ $tiket->email_pemohon ?? '-' }}
+                        @if(!empty($tiket->email_pemohon) && $tiket->status === 'dikembalikan')
+                            <form action="{{ route('tikets.kirim_notifikasi_revisi', $tiket->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-link btn-sm p-0 ms-1 text-primary" title="Kirim ulang notifikasi revisi ke email pemohon">
+                                    <i class="bi bi-envelope-arrow-up"></i>
+                                </button>
+                            </form>
+                        @endif
+                    </strong>
+                </div>
             </div>
             <div class="col-md-6">
                 <div class="d-flex justify-content-between border-bottom py-1">

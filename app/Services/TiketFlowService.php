@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\TiketRevisiMail;
 use App\Models\CatatanRevisi;
 use App\Models\LembarKerjaWarkah;
 use App\Models\RiwayatStatus;
@@ -10,6 +11,7 @@ use App\Models\TiketPenugasan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * TiketFlowService — inti pola kerja V2.0:
@@ -337,6 +339,30 @@ class TiketFlowService
                 'keterangan' => "Berkas dikembalikan untuk revisi ke-{$revisiKe}: {$isiRevisi}",
             ]);
         });
+
+        // Notifikasi email ke pemohon (opsional: hanya jika email terisi & valid).
+        $this->sendRevisiEmail($tiket, $isiRevisi);
+    }
+
+    /**
+     * Kirim notifikasi email revisi ke pemohon bila alamat email tersedia.
+     * Dijalankan setelah transaksi commit; kegagalan pengiriman tidak
+     * menggagalkan proses revisi.
+     */
+    public function sendRevisiEmail(Tiket $tiket, ?string $catatan = null): void
+    {
+        $email = $tiket->email_pemohon;
+
+        if (empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        try {
+            Mail::to($email)->send(new TiketRevisiMail($tiket->loadMissing('jenisPermohonan'), $catatan));
+        } catch (\Throwable $e) {
+            // Jangan sampai gagal kirim email merusak alur revisi.
+            report($e);
+        }
     }
 
     /**

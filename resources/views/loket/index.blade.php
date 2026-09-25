@@ -222,6 +222,12 @@
                             @error('no_hp_pemohon')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Email Pemohon</label>
+                            <input type="email" name="email_pemohon" value="{{ old('email_pemohon') }}" class="form-control @error('email_pemohon') is-invalid @enderror" placeholder="contoh@email.com" maxlength="255">
+                            @error('email_pemohon')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <small class="form-text text-muted">Opsional. Digunakan untuk notifikasi revisi/perbaikan berkas.</small>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold small">No. Hak Sekarang</label>
                             <input type="text" name="no_hak_sekarang" value="{{ old('no_hak_sekarang') }}" class="form-control" maxlength="100">
                         </div>
