@@ -54,6 +54,13 @@
                     @error('no_hp_pemohon') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-6">
+                    <label for="email_pemohon" class="form-label small fw-semibold">Email Pemohon</label>
+                    <input type="email" name="email_pemohon" id="email_pemohon" class="form-control @error('email_pemohon') is-invalid @enderror"
+                           value="{{ old('email_pemohon', $tiket->email_pemohon) }}" placeholder="contoh@email.com" maxlength="255">
+                    @error('email_pemohon') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <small class="form-text text-muted">Opsional. Digunakan untuk notifikasi revisi/perbaikan berkas.</small>
+                </div>
+                <div class="col-md-6">
                     <label for="no_hak_sekarang" class="form-label small fw-semibold">No. Hak Sekarang</label>
                     <input type="text" name="no_hak_sekarang" id="no_hak_sekarang" class="form-control @error('no_hak_sekarang') is-invalid @enderror"
                            value="{{ old('no_hak_sekarang', $tiket->no_hak_sekarang) }}" maxlength="100">

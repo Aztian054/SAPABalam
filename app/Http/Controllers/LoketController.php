@@ -168,6 +168,7 @@ class LoketController extends Controller
             'nama_pemohon' => 'required|string|max:200',
             'nik_pemohon' => 'nullable|string|max:20',
             'no_hp_pemohon' => 'required|string|max:20',
+            'email_pemohon' => ['nullable', 'email:rfc', 'max:255'],
             'no_hak_sekarang' => 'nullable|string|max:100',
             'kelurahan_desa' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
