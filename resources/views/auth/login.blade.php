@@ -13,7 +13,23 @@
         :root {
             --bpn-navy: #0b2239;
             --bpn-gold: #c69214;
+            --scrollbar-thumb: rgba(255,255,255,0.35);
         }
+        /*= Scrollbar kustom: tipis & membulat =*/
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) transparent;
+        }
+        *::-webkit-scrollbar { width: 10px; height: 10px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--scrollbar-thumb);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        *::-webkit-scrollbar-thumb:hover { background-color: var(--bpn-gold); }
+        *::-webkit-scrollbar-corner { background: transparent; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: linear-gradient(135deg, #0b2239 0%, #173b61 100%);
@@ -22,6 +38,7 @@
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
+            overflow-x: hidden;
         }
         .login-card {
             background: #fff;
@@ -41,6 +58,15 @@
             color: #fff;
         }
         .logo-sm { width: 56px; height: 56px; }
+        @media (max-width: 767.98px) {
+            body { padding: 1rem; align-items: flex-start; }
+            .login-card { border-radius: 12px; }
+        }
+        @media (max-width: 575.98px) {
+            body { padding: 0.75rem; }
+            .login-card .p-4 { padding: 1.25rem !important; }
+            .logo-sm { width: 44px; height: 44px; }
+        }
     </style>
 </head>
 <body>
@@ -58,18 +84,15 @@
             </div>
             <h4 class="fw-bold mb-3 text-warning">Sistem Loket Pertanahan Elektronik</h4>
             <p class="text-white-50 small leading-relaxed">
-                Platform digitalisasi permohonan berkas BMN & umum terintegrasi dari Loket, Verifikator, Warkah, Validator hingga Alih Media Sertifikat Elektronik.
+                Platform digitalisasi permohonan berkas BMN &amp; umum terintegrasi: Loket Pendaftaran, Ploting, Seksi 1/2, Warkah, Penyerahan, dan Pengaduan.
             </p>
         </div>
 
         <div class="mt-4 pt-3 border-top border-secondary">
             <div class="d-flex align-items-center gap-2 text-warning mb-2">
                 <i class="bi bi-shield-lock-fill"></i>
-                <span class="small fw-semibold">Akses Terenkripsi & Aman</span>
+                <span class="small fw-semibold">Akses Terenkripsi &amp; Aman</span>
             </div>
-            <a href="{{ route('tracking.index') }}" class="btn btn-sm btn-outline-light w-100 rounded-pill mt-2">
-                <i class="bi bi-qr-code-scan me-1"></i> Buka Portal Tracking Publik
-            </a>
         </div>
     </div>
 

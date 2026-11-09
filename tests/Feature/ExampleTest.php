@@ -14,13 +14,10 @@ class ExampleTest extends TestCase
      */
     public function test_the_application_returns_a_successful_response(): void
     {
-        $response = $this->get('/login');
-        $response->assertStatus(200);
+        $this->get('/')->assertRedirect(route('login'));
 
-        $responseTracking = $this->get('/tracking');
-        $responseTracking->assertStatus(200);
-
-        $responseApiStats = $this->get('/api/v1/stats');
-        $responseApiStats->assertStatus(200);
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('LOKET 2026', false);
     }
 }

@@ -8,34 +8,96 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Daftar akun ATR/BPN Kantor Pertanahan Kota Bandar Lampung.
+     *
+     * `role` + `seksi` menentukan hak akses (RBAC & Exclusive Ticket Claiming),
+     * sedangkan `jabatan` adalah identitas pegawai yang tampil di riwayat alur
+     * berkas. Super Admin tetap dipertahankan sebagai akun bayangan.
+     */
     public function run(): void
     {
-        $users = [
-            // Akun utama per dokumen "ALUR DIAGRAM VERSI RIZKI - REVISI (FINAL)", bagian "Cara Cepat Login".
-            // Password disimpan sebagai hash (password) + salinan plaintext (password_text) untuk pandangan admin.
-            ['name' => 'Muhammad Rizki Aztian',       'username' => 'admin',        'email' => 'admin@loket.balam.go.id',   'password' => Hash::make('admin123'),     'password_text' => 'admin123',     'role' => 'admin',           'nip' => '1234567890', 'no_hp' => '082361707406', 'is_active' => true],
-            ['name' => 'Ahmad Zulkifli',      'username' => 'pemimpin',     'email' => 'pemimpin@loket.balam.go.id',  'password' => Hash::make('pemimpin123'),  'password_text' => 'pemimpin123',  'role' => 'pemimpin',        'nip' => '196508151990031004', 'no_hp' => '081284456789', 'is_active' => true],
-            ['name' => 'Siti Rahayu',         'username' => 'loket1',       'email' => 'loket@loket.balam.go.id',     'password' => Hash::make('loket123'),     'password_text' => 'loket123',     'role' => 'loket',           'nip' => '199005122020042023', 'no_hp' => '085282660101', 'is_active' => true],
-            ['name' => 'Budi Santoso',        'username' => 'verifikator1', 'email' => 'verifikator@loket.balam.go.id', 'password' => Hash::make('verif123'), 'password_text' => 'verif123', 'role' => 'verifikator', 'nip' => '198711152015091001', 'no_hp' => '081387654321', 'is_active' => true],
-            ['name' => 'Dewi Anggraini',      'username' => 'warkah1',      'email' => 'warkah@loket.balam.go.id',    'password' => Hash::make('warkah123'),    'password_text' => 'warkah123',    'role' => 'warkah',          'nip' => '199206102019032024', 'no_hp' => '085390123456', 'is_active' => true],
-            ['name' => 'Muhammad Iqbal',      'username' => 'vbtel1',       'email' => 'vbtel1@loket.balam.go.id',    'password' => Hash::make('vbtel123'),     'password_text' => 'vbtel123',     'role' => 'validator_btel',  'nip' => '198803202014101001', 'no_hp' => '082134567890', 'is_active' => true],
-            ['name' => 'Ratna Sari',          'username' => 'vsuel1',       'email' => 'vsuel1@loket.balam.go.id',    'password' => Hash::make('vsuel123'),     'password_text' => 'vsuel123',     'role' => 'validator_suel',  'nip' => '199301272020042005', 'no_hp' => '085286456789', 'is_active' => true],
-            ['name' => 'Rizky Ramadhan',      'username' => 'ambt1',        'email' => 'ambt1@loket.balam.go.id',     'password' => Hash::make('ambt123'),      'password_text' => 'ambt123',      'role' => 'alih_media_btel', 'nip' => '199508122022012001', 'no_hp' => '081290345678', 'is_active' => true],
-            ['name' => 'Lina Marlina',        'username' => 'amsu1',        'email' => 'amsu1@loket.balam.go.id',     'password' => Hash::make('amsu123'),      'password_text' => 'amsu123',      'role' => 'alih_media_suel', 'nip' => '199009152018032006', 'no_hp' => '085777654321', 'is_active' => true],
+        $this->gantiUsernameLama();
 
-            // Akun kedua per jabatan (non-admin) - 2 akun aktif per tahap. Admin tetap 1.
-            ['name' => 'Sri Wahyuni',         'username' => 'pemimpin2',    'email' => 'pemimpin2@loket.balam.go.id', 'password' => Hash::make('pemimpin123'),  'password_text' => 'pemimpin123',  'role' => 'pemimpin',        'nip' => '197205091997122007', 'no_hp' => '081398765432', 'is_active' => true],
-            ['name' => 'Andi Pratama',        'username' => 'loket2',       'email' => 'loket2@loket.balam.go.id',    'password' => Hash::make('loket123'),     'password_text' => 'loket123',     'role' => 'loket',           'nip' => '199402022021041002', 'no_hp' => '085212345678', 'is_active' => true],
-            ['name' => 'Nurhayati',           'username' => 'verifikator2', 'email' => 'verifikator2@loket.balam.go.id', 'password' => Hash::make('verif123'), 'password_text' => 'verif123', 'role' => 'verifikator', 'nip' => '199110201916042008', 'no_hp' => '082189012345', 'is_active' => true],
-            ['name' => 'Eko Prasetyo',        'username' => 'warkah2',      'email' => 'warkah2@loket.balam.go.id',   'password' => Hash::make('warkah123'),    'password_text' => 'warkah123',    'role' => 'warkah',          'nip' => '199608302022051009', 'no_hp' => '081245678901', 'is_active' => true],
-            ['name' => 'Dian Puspita',        'username' => 'vbtel2',       'email' => 'vbtel2@loket.balam.go.id',    'password' => Hash::make('vbtel123'),     'password_text' => 'vbtel123',     'role' => 'validator_btel',  'nip' => '199202062019032010', 'no_hp' => '085890123456', 'is_active' => true],
-            ['name' => 'Agus Salim',          'username' => 'vsuel2',       'email' => 'vsuel2@loket.balam.go.id',    'password' => Hash::make('vsuel123'),     'password_text' => 'vsuel123',     'role' => 'validator_suel',  'nip' => '199008172015041011', 'no_hp' => '082267890123', 'is_active' => true],
-            ['name' => 'Putri Melati',        'username' => 'ambt2',        'email' => 'ambt2@loket.balam.go.id',     'password' => Hash::make('ambt123'),      'password_text' => 'ambt123',      'role' => 'alih_media_btel', 'nip' => '199705212023062012', 'no_hp' => '085700234567', 'is_active' => true],
-            ['name' => 'Rudi Hartono',        'username' => 'amsu2',        'email' => 'amsu2@loket.balam.go.id',     'password' => Hash::make('amsu123'),      'password_text' => 'amsu123',      'role' => 'alih_media_suel', 'nip' => '199312302019031011', 'no_hp' => '081356789012', 'is_active' => true],
+        $users = [
+            ['name' => 'Super Admin', 'username' => 'superadmin', 'password' => 'superadmin123', 'role' => 'super_admin', 'jabatan' => 'Super Admin', 'nip' => '100000000000000001', 'no_hp' => '081100000001'],
+            ['name' => 'Muhammad Rizki Aztian', 'username' => 'admin', 'password' => 'admin123', 'role' => 'admin', 'jabatan' => 'Admin ATR BPN BANDAR LAMPUNG', 'nip' => '1234567890', 'no_hp' => '082361707406'],
+            ['name' => 'Ahmad Zulkifli', 'username' => 'kakan', 'password' => 'kakan123', 'role' => 'kakan', 'jabatan' => 'KAKAN', 'nip' => '196508151990031004', 'no_hp' => '081100000008'],
+            ['name' => 'Kasubbag TU', 'username' => 'kasubbag', 'password' => 'kasubbag123', 'role' => 'kasubbag_tu', 'seksi' => 'TU', 'jabatan' => 'kasubbag Tata Usaha', 'nip' => '198807072013012007', 'no_hp' => '081100000012'],
+            ['name' => 'KASI Seksi Survei dan Pemetaan', 'username' => 'kasi1', 'password' => 'kasi123', 'role' => 'kasi_seksi', 'seksi' => '1', 'jabatan' => 'KASI Seksi Survei dan Pemetaan', 'nip' => '198504042010011004', 'no_hp' => '081100000005'],
+            ['name' => 'kasi Seksi Penetapan Hak dan Pendaftaran', 'username' => 'kasi2', 'password' => 'kasi123', 'role' => 'kasi_seksi', 'seksi' => '2', 'jabatan' => 'kasi Seksi Penetapan Hak dan Pendaftaran', 'nip' => '198605052011012005', 'no_hp' => '081100000010'],
+            ['name' => 'kasi Seksi Penataan dan Pemberdayaan', 'username' => 'kasi3', 'password' => 'kasi123', 'role' => 'kasi_seksi', 'seksi' => '3', 'jabatan' => 'kasi Seksi Penataan dan Pemberdayaan', 'nip' => '198706062012011006', 'no_hp' => '081100000011'],
+            ['name' => 'Kasi Seksi Pengadaan Tanah dan Pengembangan', 'username' => 'kasi4', 'password' => 'kasi123', 'role' => 'kasi_seksi', 'seksi' => '4', 'jabatan' => 'Kasi Seksi Pengadaan Tanah dan Pengembangan', 'nip' => '198908082014011008', 'no_hp' => '081100000013'],
+            ['name' => 'Kasi Seksi Pengendalian dan Penanganan Sengketa', 'username' => 'kasi5', 'password' => 'kasi123', 'role' => 'kasi_seksi', 'seksi' => '5', 'jabatan' => 'Kasi Seksi Pengendalian dan Penanganan Sengketa', 'nip' => '199009092015011009', 'no_hp' => '081100000014'],
+            ['name' => 'LOKET PENDAFTARAN', 'username' => 'loket1', 'password' => 'loket123', 'role' => 'loket_pendaftaran', 'jabatan' => 'LOKET PENDAFTARAN', 'nip' => '199501012020012001', 'no_hp' => '081100000002'],
+            ['name' => 'Loket Pengaduan', 'username' => 'pengaduan1', 'password' => 'loket123', 'role' => 'loket_pengaduan', 'jabatan' => 'LOKET PENGADUAN', 'nip' => '199906062024011006', 'no_hp' => '081100000007'],
+            ['name' => 'LOKET PENYERAHAN', 'username' => 'serah1', 'password' => 'loket123', 'role' => 'loket_penyerahan', 'jabatan' => 'LOKET PENYERAHAN', 'nip' => '199805052023012005', 'no_hp' => '081100000006'],
+            ['name' => 'Loket Ploting', 'username' => 'ploting', 'password' => 'ploting123', 'role' => 'loket_ploting', 'jabatan' => 'Loket Ploting', 'nip' => '199602022021011002', 'no_hp' => '081100000003'],
+            ['name' => 'Dewi Anggraini', 'username' => 'warkah', 'password' => 'warkah123', 'role' => 'petugas_warkah', 'jabatan' => 'PETUGAS WARKAH', 'nip' => '199206102019032024', 'no_hp' => '085390123456'],
+            ['name' => 'AlihMediaBT', 'username' => 'alihmediabt', 'password' => 'alihmedia123', 'role' => 'staf_seksi', 'seksi' => '2', 'jabatan' => 'AlihMedia BT', 'nip' => '199804042023011004', 'no_hp' => '081100000009'],
+            ['name' => 'AlihmediaSU', 'username' => 'alihmediasu', 'password' => 'alihmedia123', 'role' => 'staf_seksi', 'seksi' => '1', 'jabatan' => 'AlihMedia SU', 'nip' => '196508151990031004', 'no_hp' => '081100000008'],
+            ['name' => 'ValidatorBT', 'username' => 'validatorbt', 'password' => 'validator123', 'role' => 'staf_seksi', 'seksi' => '2', 'jabatan' => 'Validator BT', 'nip' => '199703032022012003', 'no_hp' => '081100000004'],
+            ['name' => 'ValidatorSU', 'username' => 'validatorsu', 'password' => 'validator123', 'role' => 'staf_seksi', 'seksi' => '1', 'jabatan' => 'Validator SU', 'nip' => '196508151990031004', 'no_hp' => '081100000008'],
         ];
 
         foreach ($users as $user) {
-            User::updateOrCreate(['username' => $user['username']], $user);
+            $username = $user['username'];
+
+            User::updateOrCreate(
+                ['username' => $username],
+                [
+                    'name' => $user['name'],
+                    'email' => $username.'@loket.balam.go.id',
+                    'password' => Hash::make($user['password']),
+                    'password_text' => $user['password'],
+                    'role' => $user['role'],
+                    'seksi' => $user['seksi'] ?? null,
+                    'jabatan' => $user['jabatan'],
+                    'nip' => $user['nip'],
+                    'no_hp' => $user['no_hp'],
+                    'is_active' => true,
+                ]
+            );
         }
+
+        $this->nonaktifkanAkunLama();
+    }
+
+    /**
+     * Samakan username lama dengan daftar akun baru tanpa membuat duplikat.
+     * Akun lama tetap membawa riwayat penugasannya.
+     */
+    private function gantiUsernameLama(): void
+    {
+        $pemetaan = [
+            'loketdaftar1' => 'loket1',
+            'loketploting1' => 'ploting',
+            'warkah1' => 'warkah',
+            'kasubbagtu' => 'kasubbag',
+        ];
+
+        foreach ($pemetaan as $lama => $baru) {
+            $akun = User::where('username', $lama)->first();
+
+            if ($akun === null || User::where('username', $baru)->exists()) {
+                continue;
+            }
+
+            $akun->update([
+                'username' => $baru,
+                'email' => $baru.'@loket.balam.go.id',
+            ]);
+        }
+    }
+
+    /**
+     * Akun lama yang tidak ada di daftar baru dinonaktifkan, bukan dihapus,
+     * agar riwayat penugasan tetap utuh.
+     */
+    private function nonaktifkanAkunLama(): void
+    {
+        User::query()
+            ->whereIn('username', ['staf1a', 'staf2a', 'kasiunit3'])
+            ->update(['is_active' => false]);
     }
 }

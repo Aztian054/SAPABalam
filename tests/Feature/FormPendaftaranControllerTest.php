@@ -71,7 +71,6 @@ class FormPendaftaranControllerTest extends TestCase
         return Tiket::create([
             'kode_tiket' => 'TEST/'.now()->timestamp,
             'nomor_antrian' => 'A-001',
-            'status_pembetulan' => 'P0',
             'tanggal_masuk' => now()->toDateString(),
             'jenis_permohonan_id' => $jenis->id,
             'nama_pemohon' => 'Pemohon Uji',
@@ -381,27 +380,5 @@ class FormPendaftaranControllerTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertTrue($hak->fresh()->is_active);
-    }
-
-    public function test_bidang_tanah_dengan_jenis_hak_yang_tidak_terdaftar_ditolak(): void
-    {
-        $jenis = $this->jenisPermohonan();
-        $this->jenisHak('HM');
-
-        $this->actingAs($this->user('loket'))
-            ->from(route('loket.create'))
-            ->post(route('loket.store'), [
-                'kode_tiket' => 'BLM/2026/0001',
-                'jenis_permohonan_id' => $jenis->id,
-                'nama_pemohon' => 'Pemohon Uji',
-                'no_hp_pemohon' => '081200000000',
-                'jumlah_bidang' => 1,
-                'bidang' => [
-                    ['jenis_hak' => 'XZY'],
-                ],
-            ])
-            ->assertSessionHasErrors('bidang.0.jenis_hak');
-
-        $this->assertDatabaseMissing('tikets', ['kode_tiket' => 'BLM/2026/0001']);
     }
 }

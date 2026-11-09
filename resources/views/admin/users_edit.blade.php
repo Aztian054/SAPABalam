@@ -20,7 +20,7 @@
 
     <div class="card card-custom max-w-640">
         <div class="card-header bg-white py-3">
-            <h6 class="mb-0 fw-bold">Akun: <span class="badge bg-secondary">{{ $user->role_label }}</span></h6>
+            <h6 class="mb-0 fw-bold">Role: <span class="badge bg-secondary">{{ $user->role_label }}</span></h6>
         </div>
         <div class="card-body">
             <form action="{{ route('admin.users.update', $user->id) }}" method="POST">
@@ -50,6 +50,21 @@
                     </div>
                 </div>
                 <div class="mb-2">
+                    <label class="form-label">Seksi</label>
+                    <select name="seksi" class="form-select">
+                        <option value="">— Tidak terikat seksi —</option>
+                        @foreach(\App\Models\User::SEKSI as $key => $label)
+                            <option value="{{ $key }}" @selected((string) old('seksi', $user->seksi) === (string) $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">Untuk role Staf Seksi, Kasi Seksi, dan Kasi Unit.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Jabatan (Input Manual)</label>
+                    <input name="jabatan" class="form-control" maxlength="100" value="{{ old('jabatan', $user->jabatan) }}" placeholder="Contoh: Validator">
+                    <div class="form-text">Nama jabatan bebas; dapat diisi Admin atau diubah sendiri oleh pemilik akun lewat Profil.</div>
+                </div>
+                <div class="mb-2">
                     <label class="form-label">Password</label>
                     <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah password">
                     <div class="form-text">
@@ -58,10 +73,10 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Jabatan</label>
+                    <label class="form-label">Role</label>
                     <div><span class="badge bg-secondary fs-6">{{ $user->role_label }}</span></div>
                     <div class="form-text text-danger">
-                        <i class="bi bi-lock-fill me-1"></i>Jabatan tidak dapat diubah pada akun yang sudah dibuat agar hak akses dan alur berkas tidak rusak.
+                        <i class="bi bi-lock-fill me-1"></i>Role tidak dapat diubah pada akun yang sudah dibuat agar hak akses dan alur berkas tidak rusak.
                     </div>
                 </div>
                 <div class="d-flex gap-2">

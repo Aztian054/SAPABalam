@@ -2,16 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\JenisPermohonan;
-use App\Models\Tiket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
- * SPA React (Fase 1) — shell /app + API auth Sanctum stateful:
- *   shell SPA, login, me, logout, dashboard, dan tracking publik (kode berslash).
+ * API v1 auth Sanctum stateful + dashboard: login, me, logout, dashboard.
+ * Tidak ada lagi endpoint tracking publik maupun shell SPA React.
  */
 class ApiV1AuthTest extends TestCase
 {
@@ -19,7 +17,7 @@ class ApiV1AuthTest extends TestCase
 
     private const SPA_ORIGIN = 'http://loket2026.test';
 
-    private function user(string $role = 'admin'): User
+    private function user(string $role = 'admin', array $atribut = []): User
     {
         return User::factory()->create([
             'name' => 'Petugas '.ucfirst($role),
@@ -28,6 +26,7 @@ class ApiV1AuthTest extends TestCase
             'password' => Hash::make('password'),
             'role' => $role,
             'is_active' => true,
+            ...$atribut,
         ]);
     }
 
@@ -41,42 +40,35 @@ class ApiV1AuthTest extends TestCase
             ->{$method}($uri, $data);
     }
 
-    public function test_shell_spa_terlayani_di_prefix_app(): void
-    {
-        $this->get('/app/dashboard')
-            ->assertOk()
-            ->assertSee('id="root"', false);
-    }
-
     public function test_login_berhasil_mengembalikan_user(): void
     {
-        $this->user('loket');
+        $this->user('loket_pendaftaran');
 
         $response = $this->apiCall('postJson', '/api/v1/login', [
-            'username' => 'loket',
+            'username' => 'loket_pendaftaran',
             'password' => 'password',
         ]);
 
         $response->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.user.username', 'loket')
-            ->assertJsonPath('data.user.role', 'loket')
-            ->assertJsonPath('data.user.role_label', 'Loket Penerimaan');
+            ->assertJsonPath('data.user.username', 'loket_pendaftaran')
+            ->assertJsonPath('data.user.role', 'loket_pendaftaran')
+            ->assertJsonPath('data.user.role_label', 'Loket Pendaftaran');
 
         // Simulasi request baru (guard dimuat ulang) — session tetap dikenali.
         $this->app['auth']->forgetGuards();
 
         $this->apiCall('getJson', '/api/v1/me')
             ->assertOk()
-            ->assertJsonPath('data.user.username', 'loket');
+            ->assertJsonPath('data.user.username', 'loket_pendaftaran');
     }
 
     public function test_login_salah_password_mengembalikan_401(): void
     {
-        $this->user('loket');
+        $this->user('loket_pendaftaran');
 
         $this->apiCall('postJson', '/api/v1/login', [
-            'username' => 'loket',
+            'username' => 'loket_pendaftaran',
             'password' => 'salah',
         ])
             ->assertStatus(401)
@@ -90,12 +82,12 @@ class ApiV1AuthTest extends TestCase
 
     public function test_me_mengembalikan_user_terautentikasi(): void
     {
-        $user = $this->user('verifikator');
+        $user = $this->user('staf_seksi', ['seksi' => '1']);
 
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/v1/me')
             ->assertOk()
-            ->assertJsonPath('data.user.role', 'verifikator')
+            ->assertJsonPath('data.user.role', 'staf_seksi')
             ->assertJsonPath('data.user.is_active', true);
     }
 
@@ -138,6 +130,7 @@ class ApiV1AuthTest extends TestCase
                     'total_tiket',
                     'tiket_hari_ini',
                     'tiket_selesai',
+                    'tiket_ditolak',
                     'stage_counts',
                     'monthly_data',
                     'recent_tikets',
@@ -151,8 +144,6 @@ class ApiV1AuthTest extends TestCase
     {
         $user = $this->user('admin');
 
-        // Konsolidasi dibatalkan: GET /dashboard kembali menghidangkan Blade
-        // view('dashboard.index') penuh, bukan redirect ke shell React SPA.
         $this->actingAs($user)
             ->get('/dashboard')
             ->assertOk()
@@ -160,37 +151,10 @@ class ApiV1AuthTest extends TestCase
             ->assertViewHas('totalTiket')
             ->assertViewHas('tiketHariIni')
             ->assertViewHas('tiketSelesai')
-            ->assertViewHas('tiketDikembalikan')
-            ->assertViewHas('stageCounts')
+            ->assertViewHas('tiketDitolak')
+            ->assertViewHas('statusCounts')
             ->assertViewHas('monthlyData')
             ->assertViewHas('recentTikets')
             ->assertViewHas('recentActivities');
-    }
-
-    public function test_tracking_publik_menangani_kode_berslash(): void
-    {
-        $jenis = JenisPermohonan::create([
-            'kode' => 'TRK',
-            'nama' => 'Tracking API Test',
-            'kategori' => 'umum',
-            'is_active' => true,
-        ]);
-
-        $tiket = Tiket::create([
-            'kode_tiket' => 'DEMO/V6/T6',
-            'nomor_antrian' => 1,
-            'tanggal_masuk' => now(),
-            'jenis_permohonan_id' => $jenis->id,
-            'nama_pemohon' => 'Pemohon Tracking',
-            'no_hp_pemohon' => '08130000123',
-            'jumlah_bidang' => 1,
-            'status' => 'diterima',
-        ]);
-
-        $this->get('/api/v1/tracking/DEMO%2FV6%2FT6')
-            ->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('data.no_tiket', $tiket->kode_tiket)
-            ->assertJsonPath('data.nama_pemohon', 'Pemohon Tracking');
     }
 }

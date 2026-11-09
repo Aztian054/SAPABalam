@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\RiwayatStatus;
 use App\Models\Tiket;
 use App\Models\User;
-use App\Services\TiketFlowService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -82,18 +81,13 @@ class ApiAuthController extends Controller
         $totalTiket = Tiket::count();
         $tiketHariIni = Tiket::whereDate('tanggal_masuk', $today)->count();
         $tiketSelesai = Tiket::where('status', 'selesai')->count();
-        $tiketDikembalikan = Tiket::where('status', 'dikembalikan')->count();
+        $tiketDitolak = Tiket::where('status', 'ditolak')->count();
 
         $stageCounts = [
-            'diterima' => Tiket::where('status', 'diterima')->count(),
-            'verifikasi' => Tiket::where('status', 'verifikasi')->count(),
-            'warkah' => Tiket::where('status', 'warkah')->count(),
-            'validasi_btel' => Tiket::where('status', 'validasi_btel')->count(),
-            'validasi_suel' => Tiket::where('status', 'validasi_suel')->count(),
-            'alih_media_btel' => Tiket::where('status', 'alih_media_btel')->count(),
-            'alih_media_suel' => Tiket::where('status', 'alih_media_suel')->count(),
+            'di_database' => Tiket::where('status', 'di_database')->count(),
+            'diproses' => Tiket::where('status', 'diproses')->count(),
+            'ditolak' => $tiketDitolak,
             'selesai' => $tiketSelesai,
-            'dikembalikan' => $tiketDikembalikan,
             'batal' => Tiket::where('status', 'batal')->count(),
         ];
 
@@ -109,17 +103,30 @@ class ApiAuthController extends Controller
             ];
         }
 
-        // Tiket terbaru — disaring sesuai peran (paritas dengan endpoint dashboard luring sebelumnya)
+        // Tiket terbaru — disaring sesuai jabatan V2.
         $recentQuery = Tiket::with(['jenisPermohonan'])->latest();
 
-        if (! $user->isAdmin() && ! $user->isPemimpin()) {
-            if (isset(TiketFlowService::ROLE_STAGE[$user->role])) {
-                $stage = TiketFlowService::ROLE_STAGE[$user->role];
-                $recentQuery->whereHas('penugasans', function ($q) use ($stage, $user) {
-                    $q->where('stage', $stage)->where('user_id', $user->id);
-                });
-            } elseif ($user->role === 'loket') {
-                $recentQuery->where('petugas_loket_id', $user->id);
+        if (! $user->isAdmin() && ! $user->isKakan()) {
+            if ($user->isLoketPendaftaran()) {
+                $recentQuery->where(fn ($q) => $q
+                    ->where('created_by', $user->id)
+                    ->orWhere('petugas_loket_id', $user->id));
+            } elseif ($user->isStafSeksi()) {
+                $recentQuery->where('penanggung_jawab_id', $user->id);
+            } elseif ($user->isKasiSeksi()) {
+                $stafIds = User::where('role', 'staf_seksi')
+                    ->where('seksi', $user->seksi)
+                    ->pluck('id')
+                    ->all();
+                $recentQuery->whereIn('penanggung_jawab_id', $stafIds);
+            } elseif ($user->isLoketPenyerahan()) {
+                $recentQuery->where(fn ($q) => $q
+                    ->where('penanggung_jawab_id', $user->id)
+                    ->orWhere('diserahkan_oleh_id', $user->id));
+            } elseif ($user->isPetugasWarkah()) {
+                $recentQuery->whereHas('warkahPermintaans');
+            } else {
+                $recentQuery->whereRaw('1 = 0');
             }
         }
 
@@ -127,6 +134,7 @@ class ApiAuthController extends Controller
             return [
                 'id' => $t->id,
                 'kode_tiket' => $t->kode_tiket,
+                'no_berkas' => $t->no_berkas,
                 'nama_pemohon' => $t->nama_pemohon,
                 'status' => $t->status,
                 'status_label' => $t->status_label,
@@ -159,7 +167,7 @@ class ApiAuthController extends Controller
                 'total_tiket' => $totalTiket,
                 'tiket_hari_ini' => $tiketHariIni,
                 'tiket_selesai' => $tiketSelesai,
-                'tiket_dikembalikan' => $tiketDikembalikan,
+                'tiket_ditolak' => $tiketDitolak,
                 'stage_counts' => $stageCounts,
                 'monthly_data' => $monthlyData,
                 'recent_tikets' => $recentTikets,
@@ -179,7 +187,7 @@ class ApiAuthController extends Controller
             'username' => $user->username,
             'email' => $user->email,
             'role' => $user->role,
-            'role_label' => User::ROLES[$user->role] ?? ucfirst((string) $user->role),
+            'role_label' => $user->role_label,
             'nip' => $user->nip,
             'no_hp' => $user->no_hp,
             'is_active' => $user->is_active,

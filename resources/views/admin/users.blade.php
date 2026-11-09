@@ -11,13 +11,13 @@
         </button>
     </div>
     <p class="text-muted small mb-3">
-        Setiap jabatan boleh memiliki <strong>banyak akun</strong>; satu berkas hanya boleh dikerjakan satu akun dalam jabatan yang sama (<strong>Exclusive Ticket Claiming</strong>).
+        Setiap role boleh memiliki <strong>banyak akun</strong>; satu berkas hanya boleh dikerjakan satu akun dalam role yang sama (<strong>Exclusive Ticket Claiming</strong>).
     </p>
 
     <form method="GET" class="mb-2">
         <select name="role" class="form-select max-w-280" onchange="this.form.submit()">
-            <option value="">Semua Jabatan</option>
-            @foreach(\App\Models\User::ROLES as $key => $label)
+            <option value="">Semua Role</option>
+            @foreach(\App\Models\User::rolesForAccountFilter() as $key => $label)
                 <option value="{{ $key }}" {{ request('role') === $key ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
@@ -27,15 +27,21 @@
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead class="table-light">
-                    <tr><th>Nama</th><th>Username</th><th>Password</th><th>Jabatan</th><th>NIP</th><th>No. HP</th><th>Status</th><th class="text-end">Aksi</th></tr>
+                    <tr><th>Nama</th><th>Username</th><th>Password</th><th>Role</th><th>Jabatan</th><th>NIP</th><th>No. HP</th><th>Status</th><th class="text-end">Aksi</th></tr>
                 </thead>
                 <tbody>
                     @forelse($users as $u)
                         <tr>
-                            <td class="fw-semibold">{{ $u->name }}</td>
+                            <td class="fw-semibold">
+                                {{ $u->name }}
+                                @if ($u->is_demo)<span class="badge bg-info text-dark ms-1">DEMO</span>@endif
+                            </td>
                             <td>{{ $u->username }}</td>
                             <td><code class="text-dark">{{ $u->password_text ?? '—' }}</code></td>
-                            <td><span class="badge bg-secondary">{{ $u->role_label }}</span></td>
+                            <td>
+                                <span class="badge bg-secondary">{{ $u->role_label }}</span>
+                            </td>
+                            <td><small class="text-muted">{{ $u->jabatan ?? '-' }}</small></td>
                             <td><small class="text-muted">{{ $u->nip ?? '-' }}</small></td>
                             <td><small class="text-muted">{{ $u->no_hp ?? '-' }}</small></td>
                             <td>
@@ -45,7 +51,7 @@
                                 <a href="{{ route('admin.users.edit', $u->id) }}" class="btn btn-sm btn-outline-primary" title="Edit akun">
                                     <i class="bi bi-pencil me-1"></i>Edit
                                 </a>
-                                @if ($u->role !== 'admin')
+                                @if (! in_array($u->role, ['admin', 'super_admin'], true))
                                     <form action="{{ route('admin.users.toggle', $u->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-sm btn-{{ $u->is_active ? 'dark' : 'success' }}">
@@ -63,7 +69,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center text-muted py-4">Tidak ada akun.</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted py-4">Tidak ada akun.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -121,15 +127,32 @@
                             <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" minlength="6" required>
                             @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="mb-1">
-                            <label class="form-label fw-semibold small">Jabatan <span class="text-danger">*</span></label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Seksi</label>
+                            <select name="seksi" class="form-select @error('seksi') is-invalid @enderror">
+                                <option value="">— Tidak terikat seksi —</option>
+                                @foreach(\App\Models\User::SEKSI as $key => $label)
+                                    <option value="{{ $key }}" @selected(old('seksi') === (string) $key)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Wajib untuk role Staf Seksi, Kasi Seksi, dan Kasi Unit.</div>
+                            @error('seksi')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Role <span class="text-danger">*</span></label>
                             <select name="role" class="form-select @error('role') is-invalid @enderror" required>
-                                <option value="">— Pilih Jabatan —</option>
+                                <option value="">— Pilih Role —</option>
                                 @foreach(\App\Models\User::rolesNonAdmin() as $key => $label)
                                     <option value="{{ $key }}" @selected(old('role') === $key)>{{ $label }}</option>
                                 @endforeach
                             </select>
                             @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label fw-semibold small">Jabatan (Input Manual)</label>
+                            <input name="jabatan" value="{{ old('jabatan') }}" class="form-control @error('jabatan') is-invalid @enderror" maxlength="100" placeholder="Contoh: Validator">
+                            <div class="form-text">Nama jabatan bebas; dapat diisi Admin atau diubah sendiri oleh pemilik akun lewat Profil.</div>
+                            @error('jabatan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="modal-footer bg-light py-3">

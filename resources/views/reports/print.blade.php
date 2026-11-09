@@ -45,6 +45,7 @@
             <tr>
                 <th class="col-no">No</th>
                 <th class="col-tiket">No. Tiket</th>
+                <th class="col-tiket">No. Berkas</th>
                 <th class="col-tgl">Tgl Masuk</th>
                 <th>Nama Pemohon / Instansi</th>
                 <th>Jenis Layanan</th>
@@ -58,6 +59,7 @@
                 <tr>
                     <td style="text-align: center;">{{ $idx + 1 }}</td>
                     <td style="font-weight: bold;">{{ $t->kode_tiket }}</td>
+                    <td>{{ $t->no_berkas ?: '-' }}</td>
                     <td style="text-align: center;">{{ $t->tanggal_masuk->format('d/m/Y') }}</td>
                     <td>{{ $t->nama_pemohon }}</td>
                     <td>{{ $t->jenisPermohonan->kode }} - {{ $t->jenisPermohonan->nama }}</td>
@@ -67,7 +69,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="empty-row">Tidak ada data permohonan.</td>
+                    <td colspan="9" class="empty-row">Tidak ada data permohonan.</td>
                 </tr>
             @endforelse
         </tbody>

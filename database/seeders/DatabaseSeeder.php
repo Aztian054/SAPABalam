@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
             KategoriPermohonanSeeder::class,
             JenisHakSeeder::class,
             JenisPermohonanSeeder::class,
-            SampleTiketSeeder::class,
+            MenuSeeder::class,
         ]);
     }
 }

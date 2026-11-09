@@ -1,10 +1,177 @@
 @extends('layouts.app')
+
 @section('title', 'Dashboard Monitoring')
+
 @section('content')
-<div class="row g-3 mb-4"><div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2"><div><h4 class="fw-bold mb-1">Dashboard Pelayanan</h4><p class="text-muted small mb-0">Selamat datang, <strong>{{ auth()->user()->name }}</strong></p></div><div class="d-flex gap-2"><a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm rounded-3 px-3"><i class="bi bi-printer me-1"></i> Laporan</a></div></div></div>
-<div class="row g-3 mb-4"><div class="col-sm-6 col-xl-3"><div class="card card-custom p-3 border-start border-4 border-primary"><div class="d-flex align-items-center justify-content-between"><div><div class="text-muted small fw-semibold text-uppercase">Total</div><h3 class="fw-bold my-1">{{ number_format($totalTiket) }}</h3></div><div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle"><i class="bi bi-folder-fill fs-3"></i></div></div></div></div><div class="col-sm-6 col-xl-3"><div class="card card-custom p-3 border-start border-4 border-warning"><div class="d-flex align-items-center justify-content-between"><div><div class="text-muted small fw-semibold text-uppercase">Hari Ini</div><h3 class="fw-bold my-1">{{ number_format($tiketHariIni) }}</h3></div><div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle"><i class="bi bi-inbox-fill fs-3"></i></div></div></div></div><div class="col-sm-6 col-xl-3"><div class="card card-custom p-3 border-start border-4 border-success"><div class="d-flex align-items-center justify-content-between"><div><div class="text-muted small fw-semibold text-uppercase">Selesai</div><h3 class="fw-bold my-1 text-success">{{ number_format($tiketSelesai) }}</h3></div><div class="bg-success bg-opacity-10 text-success p-3 rounded-circle"><i class="bi bi-patch-check-fill fs-3"></i></div></div></div></div><div class="col-sm-6 col-xl-3"><div class="card card-custom p-3 border-start border-4 border-danger"><div class="d-flex align-items-center justify-content-between"><div><div class="text-muted small fw-semibold text-uppercase">Dikembalikan</div><h3 class="fw-bold my-1 text-danger">{{ number_format($tiketDikembalikan) }}</h3></div><div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle"><i class="bi bi-arrow-counterclockwise fs-3"></i></div></div></div></div></div><div class="row g-3 mb-4"><div class="col-lg-4"><div class="card card-custom p-4 h-100"><h6 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart text-primary me-2"></i>Distribusi Status</h6><div class="chart-container"><canvas id="chartStatus"></canvas></div></div></div><div class="col-lg-4"><div class="card card-custom p-4 h-100"><h6 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart text-warning me-2"></i>Tren 6 Bulan</h6><div class="chart-container"><canvas id="chartMonthly"></canvas></div></div></div><div class="col-lg-4"><div class="card card-custom p-4 h-100"><h6 class="fw-bold text-dark mb-3"><i class="bi bi-diagram-3 text-info me-2"></i>Progres Tahap</h6><div class="chart-container"><canvas id="chartStages"></canvas></div></div></div></div><div class="row g-3 mb-4"><div class="col-lg-8"><div class="card card-custom p-4 h-100"><h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Permohonan Terbaru</h6><div class="table-responsive"><table class="table table-hover table-sm align-middle mb-0" style="font-size:0.85rem"><thead class="table-light"><tr><th>Kode</th><th>Pemohon</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($recentTikets as $t)<tr><td class="fw-bold">{{ $t->kode_tiket }}</td><td>{{ $t->nama_pemohon }}<br><small class="text-muted">{{ $t->jenisPermohonan->nama ?? '-' }}</small></td><td><span class="badge bg-light text-dark border">{{ $t->jenisPermohonan->kode }}</span></td><td><span class="badge bg-{{ $t->status_badge }}">{{ $t->status_label }}</span></td><td>@if(auth()->user()->isLoket()||auth()->user()->role==='admin')<a href="{{ route('loket.show', $t->id) }}" class="btn btn-sm btn-outline-primary py-1 px-2"><i class="bi bi-eye"></i></a>@else<span class="text-muted">&mdash;</span>@endif</td></tr>@empty<tr><td colspan="5" class="text-center py-4 text-muted">Belum ada data.</td></tr>@endforelse</tbody></table></div></div></div><div class="col-lg-4"><div class="card card-custom p-4 h-100"><h6 class="fw-bold text-dark mb-3"><i class="bi bi-activity text-warning me-2"></i>Aktivitas Terakhir</h6><div class="list-group list-group-flush" style="font-size:0.84rem">@forelse($recentActivities as $act)<div class="list-group-item px-0 py-2 border-bottom"><div class="d-flex justify-content-between mb-1"><span class="fw-bold">{{ $act->tiket->kode_tiket ?? '-' }}</span><small class="text-muted">{{ $act->created_at->diffForHumans() }}</small></div><div class="text-primary small">{{ $act->stage_dari }} &rarr; <strong>{{ $act->stage_ke }}</strong></div><div class="text-muted small fst-italic">{{ $act->keterangan }}</div></div>@empty<div class="text-center py-4 text-muted small">Belum ada aktivitas.</div>@endforelse</div></div></div></div></div>
+@php
+    $statusMeta = [
+        'di_database' => ['Di Database Admin', 'secondary'],
+        'diproses' => ['Sedang Diproses', 'primary'],
+        'ditolak' => ['Ditolak', 'danger'],
+        'selesai' => ['Selesai', 'success'],
+        'batal' => ['Dibatalkan', 'dark'],
+    ];
+
+    $tautanTiket = function ($t) {
+        $role = auth()->user()->role;
+
+        return match (true) {
+            auth()->user()->isAdmin() => route('admin.show', $t->id),
+            $role === 'kakan' => route('kakan.show', $t->id),
+            $role === 'staf_seksi', $role === 'kasi_seksi' => route('seksi.show', $t->id),
+            $role === 'loket_penyerahan' => route('penyerahan.show', $t->id),
+            $role === 'loket_pendaftaran' => route('pendaftaran.cetak', $t->id),
+            default => null,
+        };
+    };
+@endphp
+
+<div class="row g-3 mb-4">
+    <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h4 class="fw-bold mb-1">Dashboard Pelayanan</h4>
+            <p class="text-muted small mb-0">Selamat datang, <strong>{{ auth()->user()->name }}</strong> &mdash; {{ auth()->user()->role_label }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm rounded-3 px-3">
+                <i class="bi bi-printer me-1"></i> Laporan
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-custom p-3 border-start border-4 border-primary">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Total Berkas</div>
+                    <h3 class="fw-bold my-1">{{ number_format($totalTiket) }}</h3>
+                </div>
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle"><i class="bi bi-folder-fill fs-3"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-custom p-3 border-start border-4 border-warning">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Hari Ini</div>
+                    <h3 class="fw-bold my-1">{{ number_format($tiketHariIni) }}</h3>
+                </div>
+                <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle"><i class="bi bi-inbox-fill fs-3"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-custom p-3 border-start border-4 border-success">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Selesai</div>
+                    <h3 class="fw-bold my-1 text-success">{{ number_format($tiketSelesai) }}</h3>
+                </div>
+                <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle"><i class="bi bi-patch-check-fill fs-3"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-custom p-3 border-start border-4 border-danger">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Ditolak</div>
+                    <h3 class="fw-bold my-1 text-danger">{{ number_format($tiketDitolak) }}</h3>
+                </div>
+                <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle"><i class="bi bi-x-octagon-fill fs-3"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 h-100">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart text-primary me-2"></i>Distribusi Status</h6>
+            <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 h-100">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart text-warning me-2"></i>Tren 6 Bulan</h6>
+            <div class="chart-container"><canvas id="chartMonthly"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 h-100">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-diagram-3 text-info me-2"></i>Progres Status</h6>
+            <div class="chart-container"><canvas id="chartStages"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card card-custom p-4 h-100">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Permohonan Terbaru</h6>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm align-middle mb-0" style="font-size:0.85rem">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No. Tiket</th>
+                            <th>No. Berkas</th>
+                            <th>Pemohon</th>
+                            <th>Jenis</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentTikets as $t)
+                            @php($tautan = $tautanTiket($t))
+                            <tr>
+                                <td class="fw-bold">{{ $t->kode_tiket }}</td>
+                                <td class="small">{{ $t->no_berkas ?: '—' }}</td>
+                                <td>{{ $t->nama_pemohon }}<br><small class="text-muted">{{ $t->jenisPermohonan->nama ?? '-' }}</small></td>
+                                <td><span class="badge bg-light text-dark border">{{ $t->jenisPermohonan->kode ?? '-' }}</span></td>
+                                <td><span class="badge bg-{{ $t->status_badge }}">{{ $t->status_label }}</span></td>
+                                <td>
+                                    @if($tautan)
+                                        <a href="{{ $tautan }}" class="btn btn-sm btn-outline-primary py-1 px-2"><i class="bi bi-eye"></i></a>
+                                    @else
+                                        <span class="text-muted">&mdash;</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Belum ada data.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 h-100">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-activity text-warning me-2"></i>Aktivitas Terakhir</h6>
+            <div class="list-group list-group-flush" style="font-size:0.84rem">
+                @forelse($recentActivities as $act)
+                    <div class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold">{{ $act->tiket->kode_tiket ?? '-' }}</span>
+                            <small class="text-muted">{{ $act->created_at?->diffForHumans() }}</small>
+                        </div>
+                        <div class="text-primary small">{{ $act->stage_dari }} &rarr; <strong>{{ $act->stage_ke }}</strong></div>
+                        <div class="text-muted small fst-italic">{{ $act->keterangan }}</div>
+                    </div>
+                @empty
+                    <div class="text-center py-4 text-muted small">Belum ada aktivitas.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="dashboard-data"
-     data-stage-counts="{{ json_encode($stageCounts) }}"
+     data-status-counts="{{ json_encode($statusCounts) }}"
      data-monthly-data="{{ json_encode($monthlyData) }}"
      style="display:none"></div>
 @endsection
@@ -13,17 +180,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById('dashboard-data');
-    var sd = JSON.parse(el.dataset.stageCounts);
+    var sd = JSON.parse(el.dataset.statusCounts);
     var md = JSON.parse(el.dataset.monthlyData);
+
+    var labels = ['Di Database', 'Diproses', 'Ditolak', 'Selesai', 'Batal'];
+    var values = [sd.di_database, sd.diproses, sd.ditolak, sd.selesai, sd.batal];
+    var colors = ['#6c757d', '#0d6efd', '#dc3545', '#198754', '#212529'];
 
     new Chart(document.getElementById('chartStatus'), {
         type: 'doughnut',
         data: {
-            labels: ['Diterima','Verifikasi','Warkah','Val BT','Val SU','AM BT','AM SU','Selesai','Perbaikan','Batal'],
-            datasets: [{
-                data: [sd.diterima, sd.verifikasi, sd.warkah, sd.validasi_btel, sd.validasi_suel, sd.alih_media_btel, sd.alih_media_suel, sd.selesai, sd.dikembalikan, sd.batal],
-                backgroundColor: ['#ffc107','#17a2b8','#6c757d','#0d6efd','#7c3aed','#343a40','#4f46e5','#198754','#dc3545','#212529']
-            }]
+            labels: labels,
+            datasets: [{ data: values, backgroundColor: colors }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
     });
@@ -45,12 +213,8 @@ document.addEventListener('DOMContentLoaded', function () {
     new Chart(document.getElementById('chartStages'), {
         type: 'bar',
         data: {
-            labels: ['Diterima','Verifikasi','Warkah','Val BT','Val SU','AM BT','AM SU','Selesai','Perbaikan','Batal'],
-            datasets: [{
-                label: 'Jumlah Berkas',
-                data: [sd.diterima, sd.verifikasi, sd.warkah, sd.validasi_btel, sd.validasi_suel, sd.alih_media_btel, sd.alih_media_suel, sd.selesai, sd.dikembalikan, sd.batal],
-                backgroundColor: ['#ffc107','#17a2b8','#6c757d','#0d6efd','#7c3aed','#343a40','#4f46e5','#198754','#dc3545','#212529']
-            }]
+            labels: labels,
+            datasets: [{ label: 'Jumlah Berkas', data: values, backgroundColor: colors }]
         },
         options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
     });

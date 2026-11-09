@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\LogAktivitasService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly LogAktivitasService $log,
+    ) {}
+
     public function showLogin()
     {
         if (Auth::check()) {
@@ -28,6 +33,8 @@ class AuthController extends Controller
         if (Auth::attempt([$fieldType => $credentials['username'], 'password' => $credentials['password'], 'is_active' => true], $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            $this->log->catat('LOGIN', 'Sesi', 'Login berhasil');
+
             return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name);
         }
 
@@ -38,6 +45,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $this->log->catat('LOGOUT', 'Sesi', 'Keluar sistem');
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

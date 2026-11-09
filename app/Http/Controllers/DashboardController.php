@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\RiwayatStatus;
 use App\Models\Tiket;
 use App\Models\User;
-use App\Services\TiketFlowService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         /** @var User $user */
         $user = Auth::user();
@@ -21,43 +22,34 @@ class DashboardController extends Controller
         $totalTiket = Tiket::count();
         $tiketHariIni = Tiket::whereDate('tanggal_masuk', $today)->count();
         $tiketSelesai = Tiket::where('status', 'selesai')->count();
-        $tiketDikembalikan = Tiket::where('status', 'dikembalikan')->count();
+        $tiketDitolak = Tiket::where('status', 'ditolak')->count();
 
-        $stageCounts = [
-            'diterima' => Tiket::where('status', 'diterima')->count(),
-            'verifikasi' => Tiket::where('status', 'verifikasi')->count(),
-            'warkah' => Tiket::where('status', 'warkah')->count(),
-            'validasi_btel' => Tiket::where('status', 'validasi_btel')->count(),
-            'validasi_suel' => Tiket::where('status', 'validasi_suel')->count(),
-            'alih_media_btel' => Tiket::where('status', 'alih_media_btel')->count(),
-            'alih_media_suel' => Tiket::where('status', 'alih_media_suel')->count(),
+        $statusCounts = [
+            'di_database' => Tiket::where('status', 'di_database')->count(),
+            'diproses' => Tiket::where('status', 'diproses')->count(),
+            'ditolak' => $tiketDitolak,
             'selesai' => $tiketSelesai,
-            'dikembalikan' => $tiketDikembalikan,
             'batal' => Tiket::where('status', 'batal')->count(),
         ];
 
-        $recentQuery = Tiket::with(['jenisPermohonan', 'bidangTanahs'])->latest();
-
-        if ($user->isAdmin() || $user->isPemimpin()) {
-            // Semua tiket
-        } elseif (isset(TiketFlowService::ROLE_STAGE[$user->role])) {
-            $stage = TiketFlowService::ROLE_STAGE[$user->role];
-            $recentQuery->whereHas('penugasans', function ($q) use ($stage, $user) {
-                $q->where('stage', $stage)->where('user_id', $user->id);
-            });
-        } elseif ($user->role === 'loket') {
-            $recentQuery->where('petugas_loket_id', $user->id);
-        }
-
-        $recentTikets = $recentQuery->take(8)->get();
+        $recentTikets = $this->queryTerlihat($user)
+            ->with(['jenisPermohonan'])
+            ->latest()
+            ->take(8)
+            ->get();
 
         $recentActivities = RiwayatStatus::with(['tiket', 'user'])
-            ->latest()->take(6)->get();
+            ->when(! $user->isAdmin() && ! $user->isKakan(), function (Builder $q) use ($user) {
+                $q->whereHas('tiket', function (Builder $inner) use ($user) {
+                    $this->filterTerlihat($inner, $user);
+                });
+            })
+            ->latest()
+            ->take(6)
+            ->get();
 
-        $roles = User::ROLES;
-
-        // Monthly ticket data for charts (last 6 months)
         $monthlyData = [];
+
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $monthlyData[] = [
@@ -68,10 +60,62 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('dashboard.index', compact(
-            'totalTiket', 'tiketHariIni', 'tiketSelesai', 'tiketDikembalikan',
-            'stageCounts', 'recentTikets', 'recentActivities', 'roles', 'user',
-            'monthlyData'
-        ));
+        return view('dashboard.index', [
+            'totalTiket' => $totalTiket,
+            'tiketHariIni' => $tiketHariIni,
+            'tiketSelesai' => $tiketSelesai,
+            'tiketDitolak' => $tiketDitolak,
+            'statusCounts' => $statusCounts,
+            'recentTikets' => $recentTikets,
+            'recentActivities' => $recentActivities,
+            'user' => $user,
+            'monthlyData' => $monthlyData,
+        ]);
+    }
+
+    /** Query tiket yang boleh dilihat pengguna pada dashboard. */
+    private function queryTerlihat(User $user): Builder
+    {
+        return $this->filterTerlihat(Tiket::query(), $user);
+    }
+
+    private function filterTerlihat(Builder $query, User $user): Builder
+    {
+        if ($user->isAdmin() || $user->isKakan()) {
+            return $query;
+        }
+
+        if ($user->isLoketPendaftaran()) {
+            return $query->where(fn (Builder $q) => $q
+                ->where('created_by', $user->id)
+                ->orWhere('petugas_loket_id', $user->id));
+        }
+
+        if ($user->isStafSeksi()) {
+            return $query->where('penanggung_jawab_id', $user->id)
+                ->whereIn('status', ['diproses', 'ditolak']);
+        }
+
+        if ($user->isKasiSeksi()) {
+            $stafIds = User::where('role', 'staf_seksi')
+                ->where('seksi', $user->seksi)
+                ->pluck('id')
+                ->all();
+
+            return $query->whereIn('penanggung_jawab_id', $stafIds)
+                ->whereIn('status', ['diproses', 'ditolak']);
+        }
+
+        if ($user->isLoketPenyerahan()) {
+            return $query->where(fn (Builder $q) => $q
+                ->where('penanggung_jawab_id', $user->id)
+                ->orWhere('diserahkan_oleh_id', $user->id));
+        }
+
+        if ($user->isPetugasWarkah()) {
+            return $query->whereHas('warkahPermintaans');
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 }

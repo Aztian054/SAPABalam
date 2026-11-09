@@ -47,6 +47,7 @@
                 <tr>
                     <th class="col-no">No</th>
                     <th>Kode Tiket</th>
+                    <th>No. Berkas</th>
                     <th>Tgl Masuk</th>
                     <th>Nama Pemohon</th>
                     <th>NIK</th>
@@ -57,7 +58,6 @@
                     <th>Petugas Loket</th>
                     <th>Tgl Selesai</th>
                     <th>Status</th>
-                    <th>Pembetulan</th>
                 </tr>
             </thead>
             <tbody>
@@ -65,6 +65,7 @@
                     <tr>
                         <td>{{ $idx + 1 }}</td>
                         <td class="fw-bold">{{ $t->kode_tiket }}</td>
+                        <td>{{ $t->no_berkas ?: '-' }}</td>
                         <td>{{ $t->tanggal_masuk?->format('d/m/Y') }}</td>
                         <td>{{ $t->nama_pemohon }}</td>
                         <td>{{ $t->nik_pemohon ?? '-' }}</td>
@@ -75,7 +76,6 @@
                         <td>{{ $t->petugasLoket?->name ?? '-' }}</td>
                         <td>{{ $t->tanggal_selesai?->format('d/m/Y') ?? '-' }}</td>
                         <td><span class="badge bg-{{ $t->status_badge }}">{{ $t->status_label }}</span></td>
-                        <td class="text-center">{{ $t->status_pembetulan }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="13" class="text-center text-muted py-3">Tidak ada data pada filter ini.</td></tr>

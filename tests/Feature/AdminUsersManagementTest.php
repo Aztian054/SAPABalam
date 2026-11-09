@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
- * Manajemen akun: edit data & password (jabatan tidak diubah),
+ * Manajemen akun: edit data & password (role tidak diubah),
  * hapus akun non-admin, dan proteksi akun admin tunggal.
  */
 class AdminUsersManagementTest extends TestCase
@@ -28,7 +28,7 @@ class AdminUsersManagementTest extends TestCase
 
     public function test_akun_dengan_role_petugas_tidak_bisa_mengelola_akun(): void
     {
-        $petugas = $this->user('loket');
+        $petugas = $this->user('loket_pendaftaran');
 
         $this->actingAs($petugas)
             ->get(route('admin.users'))
@@ -38,20 +38,20 @@ class AdminUsersManagementTest extends TestCase
     public function test_admin_dapat_membuka_halaman_edit_akun(): void
     {
         $admin = $this->user('admin');
-        $loket = $this->user('loket');
+        $loket = $this->user('loket_pendaftaran');
 
         $this->actingAs($admin)
             ->get(route('admin.users.edit', $loket->id))
             ->assertOk()
             ->assertSee($loket->name)
             ->assertSee($loket->username)
-            ->assertSee('Jabatan tidak dapat diubah');
+            ->assertSee('Role tidak dapat diubah');
     }
 
     public function test_admin_dapat_mengubah_data_dan_password_akun(): void
     {
         $admin = $this->user('admin');
-        $loket = $this->user('loket');
+        $loket = $this->user('loket_pendaftaran');
 
         $this->actingAs($admin)->put(route('admin.users.update', $loket->id), [
             'name' => 'Petugas Loket Baru',
@@ -87,10 +87,10 @@ class AdminUsersManagementTest extends TestCase
         $this->assertAuthenticatedAs($loket->fresh());
     }
 
-    public function test_jabatan_tidak_dapat_diubah_ketika_mengedit_akun(): void
+    public function test_role_tidak_dapat_diubah_ketika_mengedit_akun(): void
     {
         $admin = $this->user('admin');
-        $loket = $this->user('loket');
+        $loket = $this->user('loket_pendaftaran');
 
         $this->actingAs($admin)->put(route('admin.users.update', $loket->id), [
             'name' => 'Nama Baru',
@@ -102,15 +102,15 @@ class AdminUsersManagementTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'id' => $loket->id,
-            'role' => 'loket',
+            'role' => 'loket_pendaftaran',
         ]);
     }
 
     public function test_username_atau_email_duplikat_ditolak_saat_edit(): void
     {
         $admin = $this->user('admin');
-        $a = $this->user('loket');
-        $b = $this->user('verifikator');
+        $a = $this->user('loket_pendaftaran');
+        $b = $this->user('loket_ploting');
 
         $this->actingAs($admin)
             ->from(route('admin.users.edit', $a->id))
@@ -153,7 +153,7 @@ class AdminUsersManagementTest extends TestCase
                 'username' => 'petugas_baru',
                 'email' => 'petugas_baru@test.dev',
                 'password' => 'rahasia123',
-                'role' => 'loket',
+                'role' => 'loket_pendaftaran',
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
@@ -174,7 +174,7 @@ class AdminUsersManagementTest extends TestCase
     public function test_halaman_edit_akun_menampilkan_password_saat_ini(): void
     {
         $admin = $this->user('admin');
-        $loket = $this->user('loket');
+        $loket = $this->user('loket_pendaftaran');
         $loket->update(['password_text' => 'loket1234']);
 
         $this->actingAs($admin)
@@ -187,7 +187,7 @@ class AdminUsersManagementTest extends TestCase
     public function test_akun_non_admin_dapat_dihapus(): void
     {
         $admin = $this->user('admin');
-        $loket = $this->user('loket');
+        $loket = $this->user('loket_pendaftaran');
 
         $this->actingAs($admin)
             ->post(route('admin.users.hapus', $loket->id))
@@ -219,5 +219,84 @@ class AdminUsersManagementTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('users', ['id' => $admin->id, 'is_active' => true]);
+    }
+
+    public function test_nip_dan_no_hp_tersimpan_saat_admin_membuat_akun(): void
+    {
+        $admin = $this->user('admin');
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => 'Petugas Baru',
+                'username' => 'petugas1',
+                'email' => 'petugas1@loket.test',
+                'password' => 'rahasia123',
+                'role' => 'loket_pendaftaran',
+                'nip' => '198501012025011001',
+                'no_hp' => '081234567890',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('users', [
+            'username' => 'petugas1',
+            'nip' => '198501012025011001',
+            'no_hp' => '081234567890',
+        ]);
+    }
+
+    public function test_jabatan_manual_tersimpan_saat_admin_membuat_akun(): void
+    {
+        $admin = $this->user('admin');
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => 'Petugas Baru',
+                'username' => 'petugas_jabatan',
+                'email' => 'petugas_jabatan@loket.test',
+                'password' => 'rahasia123',
+                'role' => 'staf_seksi',
+                'seksi' => '1',
+                'jabatan' => 'Validator',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('users', [
+            'username' => 'petugas_jabatan',
+            'jabatan' => 'Validator',
+        ]);
+    }
+
+    public function test_admin_dapat_mengubah_jabatan_tanpa_mengubah_role(): void
+    {
+        $admin = $this->user('admin');
+        $staf = $this->user('staf_seksi');
+        $staf->update(['seksi' => '1']);
+
+        $this->actingAs($admin)->put(route('admin.users.update', $staf->id), [
+            'name' => $staf->name,
+            'username' => $staf->username,
+            'email' => $staf->email,
+            'seksi' => '1',
+            'jabatan' => 'Verifikator Berkas',
+        ])->assertSessionHasNoErrors();
+
+        $staf->refresh();
+        $this->assertSame('Verifikator Berkas', $staf->jabatan);
+        $this->assertSame('staf_seksi', $staf->role);
+    }
+
+    public function test_daftar_akun_menampilkan_kolom_role_dan_jabatan(): void
+    {
+        $admin = $this->user('admin');
+        $loket = $this->user('loket_pendaftaran');
+        $loket->update(['jabatan' => 'Petugas Depan']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users'))
+            ->assertOk()
+            ->assertSee('Semua Role')
+            ->assertSee('<th>Role</th>', false)
+            ->assertSee('<th>Jabatan</th>', false)
+            ->assertSee('Petugas Depan');
     }
 }

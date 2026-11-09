@@ -36,17 +36,52 @@
             --bpn-bg: #f4f6f9;
             /* Lebar sidebar responsif (bukan px keras), agar sinkron dengan #main-content. */
             --sidebar-w: clamp(240px, 22vw, 280px);
+            /* Warna scrollbar kustom (dipakai halaman & sidebar). */
+            --scrollbar-thumb: rgba(100, 116, 139, 0.45);
+            --scrollbar-thumb-hover: var(--bpn-gold);
+        }
+        /*= Scrollbar kustom global: tipis, membulat, kontras di terang/gelap =*/
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) transparent;
+        }
+        *::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--scrollbar-thumb);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: var(--scrollbar-thumb-hover);
+        }
+        *::-webkit-scrollbar-corner {
+            background: transparent;
         }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bpn-bg);
             color: #334155;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+        img, svg, video, canvas {
+            max-width: 100%;
         }
         /* Sidebar Styling */
         #sidebar {
             width: var(--sidebar-w);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
             background: linear-gradient(rgba(11,34,57,0.92) 0%, rgba(6,21,36,0.96) 100%), url("{{ asset('asset/images/bgLoket01.jpeg') }}") center/cover no-repeat;
             color: #fff;
             position: fixed;
@@ -56,7 +91,33 @@
             transition: all 0.3s;
             box-shadow: 4px 0 15px rgba(0,0,0,0.05);
         }
+        /* Area menu menggulir sendiri; brand tetap di atas (sticky scroll). */
+        #sidebar .sidebar-scroll {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.28) transparent;
+            padding-bottom: 1.25rem;
+        }
+        #sidebar .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        #sidebar .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #sidebar .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.22);
+            border-radius: 999px;
+            border: none;
+        }
+        #sidebar .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.38);
+        }
         #sidebar .brand-box {
+            flex: 0 0 auto;
             padding: 1.5rem 1.25rem;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
@@ -90,10 +151,25 @@
             padding: 1.2rem 1.25rem 0.4rem;
             font-weight: 700;
         }
+        /*= Mode developer: penanda & badge role per grup menu =*/
+        #sidebar .badge-mode-dev {
+            background: rgba(198, 146, 20, 0.16);
+            color: #f0c04a;
+            border: 1px solid rgba(198, 146, 20, 0.45);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+        }
+        #sidebar .role-badge {
+            background: rgba(148, 163, 184, 0.14);
+            color: #94a3b8;
+            font-size: 0.58rem;
+            letter-spacing: 0.05em;
+        }
         /* Content Area */
         #main-content {
             margin-left: var(--sidebar-w);
             min-height: 100vh;
+            min-width: 0;
             display: flex;
             flex-direction: column;
         }
@@ -104,6 +180,17 @@
             position: sticky;
             top: 0;
             z-index: 999;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+        .topbar-date {
+            line-height: 1.2;
         }
         .card-custom {
             border: none;
@@ -174,7 +261,7 @@
         }
         @media (max-width: 991.98px) {
             #sidebar { width: 100%; max-width: 320px; margin-left: -100%; }
-            #sidebar.show { margin-left: 0; }
+            #sidebar.show { margin-left: 0; box-shadow: 0 0 40px rgba(0,0,0,0.4); }
             #main-content { margin-left: 0; }
         }
         /*= Dark mode (data-bs-theme dark) =*/
@@ -221,16 +308,35 @@
         }
 
         /*= Responsive utilities =*/
+        @media (max-width: 1199.98px) {
+            #sidebar .nav-link { font-size: 0.88rem; }
+        }
         @media (max-width: 991.98px) {
             .container-fluid.px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
             .modal-xl { max-width: 100%; margin: 0.5rem; }
             .topbar { padding-left: 1rem; padding-right: 1rem; }
             .brand-box { padding: 1rem; }
             .card-custom { border-radius: 8px; }
+            main.container-fluid.py-3 { padding-top: 0.85rem !important; }
+            footer { padding-left: 1rem !important; padding-right: 1rem !important; }
+        }
+        @media (max-width: 767.98px) {
+            .topbar { padding-top: 0.6rem; padding-bottom: 0.6rem; }
+            .topbar-date { display: none; }
+            .table-responsive { -webkit-overflow-scrolling: touch; }
+            .card-custom .card-header { padding: 0.85rem 1rem; }
+            /* Tombol aksi di kepala halaman turun baris, tidak meluber. */
+            .page-actions, main .d-flex.justify-content-between.align-items-center { flex-wrap: wrap; gap: 0.5rem; }
         }
         @media (max-width: 575.98px) {
+            body { font-size: 0.9375rem; }
+            .container-fluid.px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+            main.container-fluid.py-3 { padding-top: 0.75rem !important; }
+            .topbar { padding-left: 0.75rem; padding-right: 0.75rem; gap: 0.5rem; }
+            .topbar-actions { gap: 0.35rem; }
+            .theme-toggle, .user-menu-btn { width: 36px; height: 36px; }
             .btn-group .btn { padding: 0.375rem 0.5rem; font-size: 0.8125rem; }
-            .table-responsive { border: none; }
+            .table-responsive { border: none; margin-left: -0.25rem; margin-right: -0.25rem; }
             h4, h5, h6 { font-size: 1.1rem; }
             .fs-4 { font-size: 1.5rem !important; }
             .fs-3 { font-size: 1.75rem !important; }
@@ -238,161 +344,119 @@
             .card-body { padding: 1rem; }
             .chart-container { height: 180px !important; }
             .card-custom .p-4 { padding: 0.75rem !important; }
+            footer { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+            .pagination { flex-wrap: wrap; gap: 0.25rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
     </style>
     @yield('styles')
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
-    <nav id="sidebar">
-        <div class="brand-box d-flex align-items-center gap-3">
-            <button type="button" class="btn-close btn-close-white d-lg-none position-absolute sidebar-close-btn" id="sidebarClose" aria-label="Tutup menu"></button>
-            <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo BPN" class="rounded-circle bg-white object-fit-contain p-1 shadow-sm sidebar-logo">
-            <div>
-                <h6 class="mb-0 text-white fw-bold tracking-wide">LOKET 2026</h6>
-                <small class="text-secondary" style="font-size: 0.75rem;">Kantah Kota Bandar Lampung</small>
-            </div>
-        </div>
-
-        <div class="py-2">
-            {{-- ─── Utama (standalone) ─── --}}
-            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-grid-1x2-fill text-warning"></i> Dashboard
-            </a>
-
-            {{-- ─── Admin (DB Berkas Terpadu) ─── --}}
-            @if(auth()->user()->isAdmin())
-                <div class="nav-heading">Admin (DB Berkas Terpadu)</div>
-                <a href="{{ route('admin.index') }}" class="nav-link {{ request()->routeIs('admin.index') || request()->routeIs('admin.show') ? 'active' : '' }}">
-                    <i class="bi bi-database-fill-add text-info"></i> Daftar Berkas (Database)
-                </a>
-                <a href="{{ route('admin.selesai') }}" class="nav-link {{ request()->routeIs('admin.selesai') ? 'active' : '' }}">
-                    <i class="bi bi-check2-circle text-success"></i> Berkas Selesai
-                </a>
-                <a href="{{ route('admin.revisi') }}" class="nav-link {{ request()->routeIs('admin.revisi') ? 'active' : '' }}">
-                    <i class="bi bi-arrow-repeat text-warning"></i> Revisi (Perbaikan)
-                </a>
-                <a href="{{ route('admin.arsip') }}" class="nav-link {{ request()->routeIs('admin.arsip*') ? 'active' : '' }}">
-                    <i class="bi bi-archive-fill text-info"></i> Arsip Folder
-                </a>
-            @endif
-
-            {{-- ─── Stage sections (petugas roles) ─── --}}
-            @if(auth()->user()->role === 'loket')
-                <div class="nav-heading">Stage 1 : Loket</div>
-                <a href="{{ route('loket.index') }}" class="nav-link {{ request()->routeIs('loket.index') || request()->routeIs('loket.show') || request()->routeIs('loket.edit') ? 'active' : '' }}">
-                    <i class="bi bi-ticket-detailed-fill text-danger"></i> Daftar Berkas Loket
-                </a>
-            @endif
-
-            @if(auth()->user()->role === 'verifikator')
-                <div class="nav-heading">Stage 2 : Verifikator</div>
-                <a href="{{ route('verifikator.index') }}" class="nav-link {{ request()->routeIs('verifikator.*') ? 'active' : '' }}">
-                    <i class="bi bi-clipboard-check-fill text-success"></i> Verifikasi Berkas
-                </a>
-            @endif
-
-            @if(auth()->user()->role === 'warkah')
-                <div class="nav-heading">Stage 3 : Warkah</div>
-                <a href="{{ route('warkah.index') }}" class="nav-link {{ request()->routeIs('warkah.*') ? 'active' : '' }}">
-                    <i class="bi bi-archive-fill text-info"></i> Lembar Kerja Warkah
-                </a>
-            @endif
-
-            @if(auth()->user()->role === 'validator_btel')
-                <div class="nav-heading">Stage 4A : Validator BT</div>
-                <a href="{{ route('validator_btel.index') }}" class="nav-link {{ request()->routeIs('validator_btel.*') ? 'active' : '' }}">
-                    <i class="bi bi-shield-check text-primary"></i> Validasi Pra-BTel
-                </a>
-            @endif
-
-            @if(auth()->user()->role === 'validator_suel')
-                <div class="nav-heading">Stage 4B : Validator SU</div>
-                <a href="{{ route('validator_suel.index') }}" class="nav-link {{ request()->routeIs('validator_suel.*') ? 'active' : '' }}">
-                    <i class="bi bi-shield-shaded text-primary"></i> Validasi Pra-SuEl
-                </a>
-            @endif
-
-            @if(auth()->user()->role === 'alih_media_btel')
-                <div class="nav-heading">Stage 5A : Alih Media BT</div>
-                <a href="{{ route('alih_media_btel.index') }}" class="nav-link {{ request()->routeIs('alih_media_btel.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-diff-fill text-success"></i> Alih Media BT
-                </a>
-            @endif
-
-            @if(auth()->user()->role === 'alih_media_suel')
-                <div class="nav-heading">Stage 5B : Alih Media SU</div>
-                <a href="{{ route('alih_media_suel.index') }}" class="nav-link {{ request()->routeIs('alih_media_suel.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-spreadsheet-fill text-info"></i> Alih Media SU
-                </a>
-            @endif
-
-            {{-- ─── Monitoring ─── --}}
-            <div class="nav-heading">Monitoring :</div>
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('admin.users') }}" class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
-                    <i class="bi bi-people-fill text-primary"></i> Manajemen Akun
-                </a>
-                <a href="{{ route('admin.form-pendaftaran') }}" class="nav-link {{ request()->routeIs('admin.form-pendaftaran*') ? 'active' : '' }}">
-                    <i class="bi bi-ui-checks text-success"></i> Kelola Form Pendaftaran
-                </a>
-            @endif
-            <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                <i class="bi bi-file-earmark-bar-graph-fill text-warning"></i> Monitoring Laporan
-            </a>
-        </div>
-    </nav>
-
-    <div id="sidebarBackdrop" class="sidebar-backdrop d-lg-none"></div>
+    <!-- Sidebar Navigation (dinamis dari tabel menus) -->
+    @include('partials.sidebar')
 
     <!-- Main Content Wrapper -->
     <div id="main-content">
         <!-- Top Navbar -->
         <header class="topbar d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-sm btn-light d-lg-none" id="sidebarToggle">
+                <button class="btn btn-sm btn-light d-lg-none" id="sidebarToggle" aria-label="Buka menu">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-                <div class="d-none d-md-block">
+                <div class="d-none d-md-block topbar-date">
                     <span class="text-muted small">Sistem Loket Pelayanan Pertanahan Elektronik &bull; </span>
                     <span class="fw-semibold text-dark">{{ now()->translatedFormat('l, d F Y') }}</span>
                 </div>
             </div>
 
-            <button type="button" id="themeToggle" class="btn btn-sm btn-light border shadow-sm rounded-circle p-2 theme-toggle" title="Ganti tema terang / gelap">
-                <i class="bi bi-moon-stars-fill fs-6" id="themeToggleIcon"></i>
-            </button>
-            <!-- User Menu -->
-            <div class="d-flex align-items-center gap-3">
-                <div class="text-end d-none d-sm-block">
-                    <div class="fw-bold text-dark mb-0">{{ auth()->user()->name }}</div>
-                    <span class="badge bg-primary text-uppercase" style="font-size:0.7rem;">{{ auth()->user()->role_label }}</span>
-                </div>
-                <div class="dropdown">
-                    <button class="btn btn-light rounded-circle p-2 user-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-fill fs-5 text-secondary"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">
-                        <li class="px-3 py-2 border-bottom">
-                            <div class="fw-bold text-dark">{{ auth()->user()->name }}</div>
-                            <small class="text-muted">{{ auth()->user()->username }} ({{ auth()->user()->email }})</small>
-                        </li>
-                        <li>
-                            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger py-2 mt-1">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Keluar Sistem
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+            <div class="topbar-actions">
+                <button type="button" id="themeToggle" class="btn btn-sm btn-light border shadow-sm rounded-circle p-2 theme-toggle" title="Ganti tema terang / gelap">
+                    <i class="bi bi-moon-stars-fill fs-6" id="themeToggleIcon"></i>
+                </button>
+
+                {{-- V2: Lonceng notifikasi in-app --}}
+                <a href="{{ route('notifikasi.index') }}" id="notifBell"
+                   class="btn btn-sm btn-light border shadow-sm rounded-circle p-2 position-relative" title="Notifikasi">
+                    <i class="bi bi-bell-fill fs-6 text-secondary"></i>
+                    <span id="notifBadge"
+                          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ ($jumlahNotifikasi ?? 0) > 0 ? '' : 'd-none' }}">
+                        {{ $jumlahNotifikasi ?? 0 }}
+                    </span>
+                </a>
+
+                <!-- User Menu -->
+                <div class="d-flex align-items-center gap-2 gap-sm-3">
+                    <div class="text-end d-none d-sm-block">
+                        <div class="fw-bold text-dark mb-0">{{ auth()->user()->name }}</div>
+                        <span class="badge bg-primary text-uppercase" style="font-size:0.7rem;">{{ auth()->user()->role_label }}</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-light rounded-circle p-2 user-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu pengguna">
+                            @if (auth()->user()->foto_profil_url)
+                                <img src="{{ auth()->user()->foto_profil_url }}" alt="Foto Profil" class="rounded-circle w-100 h-100 object-fit-cover avatar-img" style="width:32px;height:32px;">
+                            @else
+                                <i class="bi bi-person-fill fs-5 text-secondary"></i>
+                            @endif
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">
+                            <li class="px-3 py-2 border-bottom">
+                                <div class="fw-bold text-dark">{{ auth()->user()->name }}</div>
+                                <small class="text-muted">{{ auth()->user()->username }} ({{ auth()->user()->email }})</small>
+                            </li>
+                            @unless (session()->has('impersonate_id'))
+                                <li>
+                                    <a href="{{ route('profil.edit') }}" class="dropdown-item py-2">
+                                        <i class="bi bi-person-gear me-2"></i> Profil Saya
+                                    </a>
+                                </li>
+                            @endunless
+                            <li>
+                                @if (session()->has('impersonate_id'))
+                                    {{-- Mode baca-saja memblokir POST, jadi Keluar Sistem diganti jalan kembali. --}}
+                                    <a href="{{ route('impersonate.stop') }}" class="dropdown-item text-warning py-2 mt-1">
+                                        <i class="bi bi-arrow-return-left me-2"></i> Kembali ke Super Admin
+                                    </a>
+                                @else
+                                    <form action="{{ route('logout') }}" method="POST" class="m-0">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger py-2 mt-1">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Keluar Sistem
+                                        </button>
+                                    </form>
+                                @endif
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </header>
 
         <!-- Flash Alerts -->
         <div class="container-fluid px-4 pt-3">
+            {{-- V2: banner mode lihat/coba sebagai akun (read-only) --}}
+            @if (session()->has('impersonate_id'))
+                <div class="alert alert-warning border-0 shadow-sm d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-eye-fill fs-5"></i>
+                        <div>
+                            <strong>Anda melihat sebagai {{ auth()->user()->name }} ({{ auth()->user()->role_label }})</strong>
+                            <div class="small">Mode baca-saja — semua aksi yang mengubah data diblokir.</div>
+                        </div>
+                    </div>
+                    <a href="{{ route('impersonate.stop') }}" class="btn btn-sm btn-dark">
+                        <i class="bi bi-arrow-return-left me-1"></i>Kembali ke Super Admin
+                    </a>
+                </div>
+            @endif
+
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm d-flex align-items-center" role="alert">
                     <i class="bi bi-check-circle-fill fs-5 me-2"></i>
@@ -472,6 +536,23 @@
                 var cur = document.documentElement.getAttribute('data-bs-theme') || 'light';
                 applyTheme(cur === 'dark' ? 'light' : 'dark');
             });
+
+            // V2: polling ringan badge notifikasi (60 detik)
+            var notifBadge = document.getElementById('notifBadge');
+            function muatJumlahNotifikasi() {
+                if (!notifBadge) return;
+                fetch('{{ route('notifikasi.jumlah') }}', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (d) {
+                        if (!d) return;
+                        var jumlah = parseInt(d.belum_dibaca, 10) || 0;
+                        notifBadge.textContent = jumlah > 99 ? '99+' : jumlah;
+                        notifBadge.classList.toggle('d-none', jumlah === 0);
+                    })
+                    .catch(function () {});
+            }
+            muatJumlahNotifikasi();
+            setInterval(muatJumlahNotifikasi, 60000);
         })();
     </script>
     @yield('scripts')
