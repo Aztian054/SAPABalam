@@ -1,4 +1,4 @@
-# PRD — LOKET 2026
+# PRD — SAPA Balam
 
 **Produk:** Sistem Pelayanan Berkas Permohonan & Pengaduan
 **Kantor:** Pertanahan Kota Bandar Lampung (BALAM) — BPN

@@ -1,7 +1,7 @@
 # Alur Pengaduan Masyarakat (Tiket LP)
 
 > **Dokumen Resmi Berdasarkan Kode Implementasi Aktual**  
-> Sistem: LOKET2026 (Laravel 13 · PHP 8.3 · MySQL · Blade)  
+> Sistem: SAPA Balam (Laravel 13 · PHP 8.3 · MySQL · Blade)  
 > Satuan Kerja: Kantor Pertanahan Kota Bandar Lampung (BALAM)  
 > Status: Revisi saat ini (tidak mencakup Super Admin)
 

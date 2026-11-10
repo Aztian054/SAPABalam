@@ -1,4 +1,4 @@
-# Dokumentasi Alur Sistem LOKET2026
+# Dokumentasi Alur Sistem SAPA Balam
 
 > Folder ini berisi dokumentasi alur kerja sistem berdasarkan **kode implementasi aktual** (bukan dokumen lama yang sudah tidak relevan).  
 > Super Admin **dieksklusi** dari semua dokumentasi alur operasional ini (hanya akses developer & darurat).

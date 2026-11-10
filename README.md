@@ -1,4 +1,4 @@
-# LOKET 2026
+# SAPA Balam
 
 ## Laporan Teknologi & Profil Sistem
 
@@ -17,7 +17,7 @@ pemohon, termasuk pengelolaan warkah fisik dan pengaduan masyarakat.
 
 | Aspek | Keterangan |
 |---|---|
-| Nama sistem | LOKET 2026 |
+| Nama sistem | SAPA Balam |
 | Instansi | Kantah BPN Kota Bandar Lampung |
 | Jenis | Aplikasi web internal |
 | Fungsi utama | Pelacakan alur berkas & pengaduan |
@@ -57,7 +57,7 @@ Komponen penting:
 - **Controller** mengatur alur tiap modul.
 - **Service** memisahkan logika lintas modul (notifikasi, penomoran tiket, log aktivitas).
 - **Middleware** menegakkan RBAC dan pembatasan Admin.
-- **Blade** merender antarmuka; aset dibangun dengan Vite.
+- **Blade** merender antarmuka; CSS/JS utama dimuat dari CDN (Bootstrap, Bootstrap Icons, Chart.js) sehingga tidak memerlukan proses build.
 - **Scheduler** menjalankan arsip otomatis dan pengingat harian.
 
 ---
@@ -72,15 +72,15 @@ Komponen penting:
 | Antarmuka | Blade + Bootstrap | 5.3.3 |
 | Ikon | Bootstrap Icons | 1.11.3 |
 | Grafik | Chart.js | 4.4.4 |
-| Build asset | Vite | 8.x |
+| Pemuatan aset | CDN (tanpa build) | — |
 | PDF | DomPDF | 3.1 |
 | API token | Laravel Sanctum | 4.0 |
 | Pengujian | PHPUnit | 12.5 |
 | Formatter | Laravel Pint | 1.27 |
-| Runtime | Node.js & npm | — |
 
-Catatan: antarmuka utama menggunakan Blade + Bootstrap; dependensi JS modern
-digunakan untuk kebutuhan build dan komponen tertentu.
+Catatan: antarmuka menggunakan Blade + Bootstrap yang dimuat dari CDN.
+Vite tetap tersedia di repositori, tetapi **tidak wajib** dijalankan untuk
+menjalankan aplikasi (tidak ada `@vite` pada view).
 
 ---
 
@@ -316,8 +316,9 @@ tests/Feature/        # pengujian fitur
 
 - PHP 8.3
 - Composer
-- Node.js & npm
 - MySQL 8
+
+Node.js & npm hanya diperlukan bila ingin memakai Vite secara manual.
 
 ---
 
@@ -333,8 +334,6 @@ Sesuaikan koneksi database pada konfigurasi lingkungan, lalu:
 
 ```bash
 php artisan migrate --seed
-npm install
-npm run build
 php artisan serve
 ```
 
@@ -372,6 +371,18 @@ vendor/bin/pint --dirty --format agent
 | Unggah lampiran | Belum |
 | Ekspor PDF/CSV lanjutan | Sebagian |
 | Push real-time | Belum |
+
+### 16.1 Riwayat Revisi Terbaru
+
+| Tanggal | Revisi |
+|---|---|
+| Nov 2026 | Rebranding sistem menjadi **SAPA Balam**; database produksi berganti nama menjadi `sapa` (data 18 akun dipindahkan utuh, DB lama diarsipkan). |
+| Nov 2026 | Halaman login didesain ulang: tata letak split-screen 45/55, background `BGloginpage.png`, animasi masuk bertahap, glow mengikuti kursor, tombol show/hide password, dan status loading anti-submit ganda. |
+| Nov 2026 | Panel kiri login memuat tombol **Tentang / Layanan / Kontak**, tautan **Website Resmi**, kontak langsung (alamat, WhatsApp, email, media sosial), serta tagline *Melayani, Profesional, Terpercaya* (font Caveat Brush). |
+| Nov 2026 | Panel **Tentang & Kontak** berbentuk offcanvas (kanan di desktop, bottom sheet di ponsel) berisi tiga tab: Tentang (visi, misi, moto), Layanan (Permohonan Online, Layanan Pengaduan), dan Kontak. |
+| Nov 2026 | Skala tipografi fluid `clamp(16px, 0.6vw + 8px, 28px)` dengan seluruh ukuran komponen dalam `rem`, tetap muat satu layar pada 1366×768 dan tanpa scroll horizontal pada zoom 50%–200%. |
+| Nov 2026 | Latar halaman utama memakai `RIWAYAT.png` dengan lapisan gelap dan penyesuaian kontras modus terang/gelap. |
+| Nov 2026 | Admin bersifat read-only untuk tiket; notifikasi in-app menjadi satu-satunya kanal; pembersihan integrasi email/WhatsApp lama. |
 
 ---
 

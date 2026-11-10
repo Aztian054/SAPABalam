@@ -891,7 +891,7 @@
 <div class="auth-shell">
 
     {{-- ============================ PANEL KIRI: BRANDING ============================ --}}
-    <section class="auth-brand" aria-label="Identitas Sistem LOKET 2026">
+    <section class="auth-brand" aria-label="Identitas Sistem SAPA Balam">
         <div class="brand-bg" aria-hidden="true"></div>
         <div class="brand-veil" aria-hidden="true"></div>
         <div class="ornaments" aria-hidden="true">
@@ -905,7 +905,7 @@
         <header class="brand-top reveal" style="--d: .05s;">
             <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo ATR/BPN" class="brand-logo">
             <div>
-                <p class="brand-name">LOKET 2026</p>
+                <p class="brand-name">SAPA Balam</p>
                 <p class="brand-office">Kantor Pertanahan Kota Bandar Lampung</p>
                 <p class="brand-tagline">Melayani, Profesional, Terpercaya</p>
             </div>

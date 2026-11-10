@@ -11,7 +11,7 @@
         <button type="button" class="btn-close btn-close-white d-lg-none position-absolute sidebar-close-btn" id="sidebarClose" aria-label="Tutup menu"></button>
         <img src="{{ asset('asset/images/logobpn2026.svg') }}" alt="Logo BPN" class="rounded-circle bg-white object-fit-contain p-1 shadow-sm sidebar-logo">
         <div>
-            <h6 class="mb-0 text-white fw-bold tracking-wide">LOKET 2026</h6>
+            <h6 class="mb-0 text-white fw-bold tracking-wide">SAPA Balam</h6>
             <small class="text-secondary" style="font-size: 0.75rem;">Kantah Kota Bandar Lampung</small>
         </div>
     </div>

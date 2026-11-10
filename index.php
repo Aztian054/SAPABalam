@@ -1,6 +1,6 @@
 <?php
 
-// Forward all root requests to public/ directory for direct localhost/LOKET2026 access
+// Forward all root requests to public/ directory for direct localhost/SAPA access
 $uri = urldecode(
     parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? ''
 );

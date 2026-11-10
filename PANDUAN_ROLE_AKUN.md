@@ -1,6 +1,6 @@
-# Panduan Peran & Fungsi Akun LOKET2026 (V2)
+# Panduan Peran & Fungsi Akun SAPA Balam (V2)
 
-> **Dokumen Resmi Berdasarkan Kode Implementasi Aktual Website LOKET2026**  
+> **Dokumen Resmi Berdasarkan Kode Implementasi Aktual Website SAPA Balam**  
 > Sistem: Laravel 13 · PHP 8.3 · MySQL · Blade + Bootstrap 5.3  
 > Satuan Kerja: Kantor Pertanahan Kota Bandar Lampung (BALAM)
 
@@ -453,5 +453,5 @@
 
 ---
 
-*Dokumen ini disusun dan disinkronkan secara langsung dari kode sumber sistem LOKET2026 (per 4 November 2026).*
+*Dokumen ini disusun dan disinkronkan secara langsung dari kode sumber sistem SAPA Balam (per 4 November 2026).*
 

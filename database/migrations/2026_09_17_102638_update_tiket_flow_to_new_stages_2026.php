@@ -7,7 +7,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * Update alur flow LOKET 2026 - versi 17 September 2026
+     * Update alur flow SAPA Balam - versi 17 September 2026
      * Perubahan: Verifikasi HARUS selesai sebelum Warkah mulai (tidak paralel lagi)
      * Tambah status "perbaikan" untuk workflow revisi yang lebih jelas
      */

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'LOKET 2026') — Sistem Pelayanan Pertanahan BMN Balam</title>
+    <title>@yield('title', 'SAPA Balam') - Sistem Pelayanan Pertanahan</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('asset/images/logobpn2026.svg') }}">
 
     <script>
@@ -530,7 +530,7 @@
 
         <!-- Footer -->
         <footer class="bg-white py-3 px-4 text-center border-top text-muted small mt-auto">
-            &copy; {{ date('Y') }} Kantor Pertanahan Kota Bandar Lampung &bull; Sistem Loket Pelayanan Elektronik &bull; LOKET 2026 v2.2
+            &copy; {{ date('Y') }} Kantor Pertanahan Kota Bandar Lampung &bull; Sistem Loket Pelayanan Elektronik &bull; SAPA Balam v2.2
         </footer>
     </div>
 

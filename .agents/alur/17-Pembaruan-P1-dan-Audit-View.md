@@ -200,3 +200,34 @@ php artisan view:cache
 - [x] RWD + sidebar sticky scroll + scrollbar kustom di semua tampilan
 - [x] Audit view vs fitur & perbaikan bug
 - [x] Dokumentasi pembaruan (dokumen ini)
+
+---
+
+## 9. Revisi November 2026
+
+### 9.1 Rebranding SAPA Balam
+
+- Nama sistem berubah dari LOKET 2026 menjadi **SAPA Balam** pada seluruh antarmuka, judul halaman, sidebar, footer, ekspor laporan, dan dokumentasi.
+- APP_NAME menjadi `SAPA Balam`; database produksi berganti nama menjadi `sapa` (32 tabel, 18 akun, dipindahkan utuh; DB lama diarsipkan).
+- Nama cookie sesi ikut berubah karena diturunkan dari `APP_NAME`, sehingga semua pengguna perlu login ulang satu kali.
+
+### 9.2 Halaman Login Baru
+
+- Tata letak split-screen: panel identitas 45% dengan `BGloginpage.png`, panel form 55%.
+- Animasi masuk bertahap, gradient bergerak, ornamen CSS, dan glow yang mengikuti kursor (tanpa tilt).
+- Tombol tampil/sembunyikan password dan status loading anti-submit ganda.
+- Panel kiri: tombol **Tentang / Layanan / Kontak**, tautan **Website Resmi**, kontak langsung (alamat, WhatsApp, email, media sosial), tagline *Melayani, Profesional, Terpercaya* (Caveat Brush).
+- Offcanvas **Tentang & Kontak** tiga tab: Tentang (visi/misi/moto), Layanan (Permohonan Online, Layanan Pengaduan), Kontak.
+- Skala tipografi fluid `clamp(16px, 0.6vw + 8px, 28px)`; seluruh komponen memakai `rem`; tetap muat pada 1366×768 dan bebas scroll horizontal pada zoom 50%–200%.
+- Tidak ada lagi tautan "Ingat saya" maupun kartu akun demo di halaman login.
+
+### 9.3 Halaman Utama
+
+- Latar konten memakai `RIWAYAT.png` dengan lapisan gelap; kontras teks disesuaikan untuk mode terang dan gelap.
+- Bootstrap JS bundle dimuat di halaman login untuk mendukung offcanvas dan tab; aset tetap dari CDN tanpa proses build.
+
+### 9.4 Verifikasi
+
+- `php artisan view:cache` berhasil.
+- Test login: 4 test / 17 assertion lulus.
+- Route smoke test: 558 rute, tidak ada error 500.

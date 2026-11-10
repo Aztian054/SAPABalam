@@ -18,6 +18,6 @@ class ExampleTest extends TestCase
 
         $this->get('/login')
             ->assertOk()
-            ->assertSee('LOKET 2026', false);
+            ->assertSee('SAPA Balam', false);
     }
 }

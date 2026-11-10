@@ -1,7 +1,7 @@
 # Sidebar Menu per Role Akun
 
 > **Dokumen Resmi Berdasarkan Kode Implementasi Aktual**  
-> Sistem: LOKET2026  
+> Sistem: SAPA Balam  
 > Sidebar di-render dari tabel `menus` melalui `SidebarService::groupsFor($user)`  
 > File: `resources/views/partials/sidebar.blade.php`  
 > Status: Revisi saat ini (Super Admin dikecualikan)

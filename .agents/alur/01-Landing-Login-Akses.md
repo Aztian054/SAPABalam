@@ -23,17 +23,33 @@ Halaman Login (/login)
 
 ## 2. Halaman Login
 
+Halaman login memakai tata letak **split-screen** (45% panel identitas, 55% panel form)
+dengan latar `asset/background/BGloginpage.png` pada panel kiri.
+
 | Elemen | Keterangan |
 |---|---|
 | Identitas | Satu kolom: **username atau email** (mengandung `@` → email) |
-| Password | Wajib |
-| Remember me | Opsional |
+| Password | Wajib, dilengkapi tombol tampil/sembunyikan |
+| Remember me | Tidak tersedia |
+| Tombol masuk | Status loading + pencegahan klik ganda saat submit |
 | Pesan gagal | "Username atau password salah, atau akun tidak aktif." |
 | Pembatasan | `throttle:6,1` — 6 percobaan/menit per klien (HTTP 429) |
 | Syarat akun | `is_active = true` |
 | Setelah sukses | Sesi diregenerasi → `/dashboard` + salam |
 
-Kartu bantuan di halaman login memuat daftar jabatan dan akun demo (hanya di lingkungan demo).
+Panel kiri memuat identitas sistem **SAPA Balam**, tagline *Melayani, Profesional,
+Terpercaya*, tombol **Tentang / Layanan / Kontak**, tombol **Website Resmi**, serta
+kontak langsung (alamat, WhatsApp, email, media sosial).
+
+Tombol Tentang/Layanan/Kontak membuka panel **offcanvas** (sisi kanan pada desktop,
+bottom sheet pada layar < 768px) berisi tiga tab: Tentang (visi, misi, moto),
+Layanan (Permohonan Online, Layanan Pengaduan), dan Kontak. Form login tetap utuh
+selama panel terbuka.
+
+Ukuran tipografi memakai skala fluid `clamp(16px, 0.6vw + 8px, 28px)`; seluruh
+komponen memakai satuan `rem` sehingga proporsional pada zoom 50%–200%.
+
+Tidak ada lagi kartu bantuan berisi daftar akun demo pada halaman login.
 
 ---
 
@@ -67,26 +83,28 @@ Semua jabatan juga mendapat **Laporan** sesuai kewenangannya.
 
 ---
 
-## 5. Akun Demo
+## 5. Akun Bawaan (Seeder)
 
-| Jabatan | Username | Password |
+Total **18 akun aktif** dibuat oleh `UserSeeder`. Kredensial tidak dicatat di
+dokumentasi ini; pengelolaan dan penggantian password dilakukan oleh Admin
+melalui menu Manajemen Akun.
+
+| Peran (`role`) | Jumlah | Cakupan |
 |---|---|---|
-| Super Admin | `superadmin` | `superadmin123` |
-| Admin | `admin` | `admin123` |
-| Loket Pendaftaran | `loketdaftar1` | `loketdaftar123` |
-| Loket Ploting | `loketploting1` | `ploting123` |
-| Petugas Warkah | `warkah1` | `warkah123` |
-| Staf Seksi 1 | `staf1a` | `staf123` |
-| Staf Seksi 2 | `staf2a` | `staf123` |
-| Kasi Seksi 1 | `kasi1` | `kasi123` |
-| Kasi Seksi 2 | `kasi2` | `kasi123` |
-| Kasi Unit 3 | `kasiunit3` | `kasiunit123` |
-| Kasubbag TU | `kasubbagtu` | `kasubbagtu123` |
-| Loket Penyerahan | `serah1` | `serah123` |
-| Loket Pengaduan | `pengaduan1` | `pengaduan123` |
-| Kakan | `kakan` | `kakan123` |
+| `super_admin` | 1 | Kendali penuh, demo, impersonate, backup |
+| `admin` | 1 | Monitoring read-only, akun, master data, log |
+| `kakan` | 1 | Monitoring pimpinan (read-only) |
+| `kasi_seksi` | 5 | Seksi 1–5, termasuk pengaduan unit |
+| `kasubbag_tu` | 1 | Tata Usaha |
+| `loket_pendaftaran` | 1 | Pendaftaran & ploting |
+| `loket_ploting` | 1 | Ploting bidang |
+| `loket_penyerahan` | 1 | Serah terima berkas |
+| `loket_pengaduan` | 1 | Registrasi & penyaluran pengaduan |
+| `petugas_warkah` | 1 | Warkah fisik |
+| `staf_seksi` | 4 | Staf Seksi 1/2 (termasuk alih media & validasi) |
 
-> Seeder `UserSeeder` sudah berisi 14 akun V2 di atas dan menghapus akun di luar daftar.
+> Seeder bersifat idempoten: akun dicocokkan berdasarkan `username`, sehingga
+> menjalankan ulang seeder tidak menggandakan data dan tidak menghapus akun lain.
 
 ---
 

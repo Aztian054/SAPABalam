@@ -96,7 +96,7 @@ class ReportController extends Controller
 
         $xml = SpreadsheetMlBuilder::build('Rekap Monitoring', $headers, $rows);
 
-        $filename = 'Rekap_LOKET2026_'.now()->format('Ymd_His').'.xls';
+        $filename = 'Rekap_SAPA_Balam_'.now()->format('Ymd_His').'.xls';
 
         return response($xml, 200, [
             'Content-Type' => 'application/vnd.ms-excel',

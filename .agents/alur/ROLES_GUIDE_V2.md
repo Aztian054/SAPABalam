@@ -1,4 +1,4 @@
-# Panduan Peran & Fungsi Akun LOKET2026 (V2)
+# Panduan Peran & Fungsi Akun SAPA Balam (V2)
 
 > Sistem: Laravel 13, PHP 8.3, MySQL, Blade + Bootstrap 5.3.  
 > Semua role terdefinisi di `users.role`, dikontrol middleware `role:xxx` atau `super_admin`.

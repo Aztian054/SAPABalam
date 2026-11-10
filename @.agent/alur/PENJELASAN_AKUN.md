@@ -1,7 +1,7 @@
 # Penjelasan Akun & Role Operasional
 
 > **Dokumen Resmi Berdasarkan Kode Implementasi Aktual**  
-> Sistem: LOKET2026 (Laravel 13 · PHP 8.3 · MySQL)  
+> Sistem: SAPA Balam (Laravel 13 · PHP 8.3 · MySQL)  
 > Satuan Kerja: Kantor Pertanahan Kota Bandar Lampung (BALAM)  
 > Status: Revisi saat ini (Super Admin dikecualikan)
 

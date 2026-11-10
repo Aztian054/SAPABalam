@@ -1,4 +1,4 @@
-# 00 — Blueprint Utama LOKET 2026 (Target V2)
+# 00 — Blueprint Utama SAPA Balam (Target V2)
 
 > **Status dokumen:** Blueprint V2 — sudah diterapkan.
 > **Status implementasi kode:** sudah (lihat §9). Dokumen ini menggambarkan alur yang berlaku di aplikasi.
@@ -8,7 +8,7 @@
 
 ## 1. Ringkasan Sistem
 
-LOKET 2026 mendigitalkan pelayanan pertanahan dari **pendaftaran di loket** sampai **penyerahan berkas** dan **arsip**, dengan:
+SAPA Balam mendigitalkan pelayanan pertanahan dari **pendaftaran di loket** sampai **penyerahan berkas** dan **arsip**, dengan:
 
 - satu basis data terpusat (Daftar Permohonan) sebagai antrean kerja bersama;
 - pola kerja **cari → ADD → proses → KIRIM** (Selesai / Tolak);

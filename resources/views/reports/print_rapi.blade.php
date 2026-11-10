@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'LOKET 2026') }} — Cetak Rekap Laporan</title>
+    <title>{{ config('app.name', 'SAPA Balam') }} - Cetak Rekap Laporan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         @media print {

@@ -1,6 +1,6 @@
-# .agents — Dokumentasi Proyek LOKET 2026
+# .agents — Dokumentasi Proyek SAPA Balam
 
-Folder ini menyimpan dokumen acuan dan aset kerja agen untuk aplikasi LOKET 2026 (Pertanahan Kota Bandar Lampung).
+Folder ini menyimpan dokumen acuan dan aset kerja agen untuk aplikasi SAPA Balam (Pertanahan Kota Bandar Lampung).
 
 ---
 

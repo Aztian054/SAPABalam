@@ -37,7 +37,7 @@ class BackupService
 
     public function namaFile(?Carbon $waktu = null): string
     {
-        return 'loket-'.($waktu ?? now())->format('Ymd-Hi').'.sql';
+        return 'sapa-'.($waktu ?? now())->format('Ymd-Hi').'.sql';
     }
 
     /**
@@ -47,7 +47,7 @@ class BackupService
      */
     public function tulisKe(callable $tulis): void
     {
-        $tulis("-- Backup LOKET 2026\n");
+        $tulis("-- Backup SAPA Balam\n");
         $tulis('-- Dibuat: '.now()->format('Y-m-d H:i:s')."\n");
         $tulis('-- Driver: '.$this->driver()."\n\n");
 
