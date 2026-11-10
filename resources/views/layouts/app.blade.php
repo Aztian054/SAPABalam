@@ -172,6 +172,15 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
+            background-color: var(--bpn-bg);
+            /*= Latar ilustrasi kantor; overlay terang agar konten tetap terbaca =*/
+            background-image:
+                linear-gradient(rgba(244, 246, 249, 0.84), rgba(244, 246, 249, 0.90)),
+                url("{{ asset('asset/background/RIWAYAT.png') }}");
+            background-size: cover;
+            background-position: center top;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
         }
         .topbar {
             background: #fff;
@@ -262,7 +271,7 @@
         @media (max-width: 991.98px) {
             #sidebar { width: 100%; max-width: 320px; margin-left: -100%; }
             #sidebar.show { margin-left: 0; box-shadow: 0 0 40px rgba(0,0,0,0.4); }
-            #main-content { margin-left: 0; }
+            #main-content { margin-left: 0; background-attachment: scroll; }
         }
         /*= Dark mode (data-bs-theme dark) =*/
         [data-bs-theme="dark"] body { background-color: #0c1725; color: #cbd5e1; }
@@ -280,6 +289,25 @@
         [data-bs-theme="dark"] .form-control::placeholder { color: #64748b; }
         [data-bs-theme="dark"] .modal-content, [data-bs-theme="dark"] .modal-header, [data-bs-theme="dark"] .modal-footer { background-color: #16233a; border-color: #22344b; }
         [data-bs-theme="dark"] .bg-white { background-color: #16233a !important; }
+        /*= Mode malam: gambar latar RIWAYAT yang cerah digelapkan, teks jadi terang =*/
+        [data-bs-theme="dark"] #main-content {
+            background-image:
+                linear-gradient(rgba(7, 16, 28, 0.90), rgba(7, 16, 28, 0.94)),
+                url("{{ asset('asset/background/RIWAYAT.png') }}");
+            color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] #main-content h1,
+        [data-bs-theme="dark"] #main-content h2,
+        [data-bs-theme="dark"] #main-content h3,
+        [data-bs-theme="dark"] #main-content h4,
+        [data-bs-theme="dark"] #main-content h5,
+        [data-bs-theme="dark"] #main-content h6 { color: #e2e8f0; }
+        [data-bs-theme="dark"] #main-content .text-secondary { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] #main-content .text-body { color: #e2e8f0 !important; }
+        [data-bs-theme="dark"] #main-content .bg-light { background-color: #1b2a42 !important; color: #e2e8f0 !important; border-color: #22344b !important; }
+        [data-bs-theme="dark"] #main-content .list-group-item { background-color: #16233a; border-color: #22344b; color: #e2e8f0; }
+        [data-bs-theme="dark"] #main-content .table { color: #e2e8f0; }
+        [data-bs-theme="dark"] #main-content .table > :not(caption) > * > * { color: #e2e8f0; border-color: #22344b; }
         /*= Sidebar backdrop (mobile) =*/
         .sidebar-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(6,15,26,0.55); display: none; }
         .sidebar-backdrop.show { display: block; }
